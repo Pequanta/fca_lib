@@ -34,15 +34,16 @@ class BipartiteGraph:
 
         attr_size = len(self.attributes)
         #The following for loop extracts an edge existing between an object if index i with jth attribute
-
         for i in range(len(self.relation_encoded)):
             j = attr_size
+            a = 0
             while j > 0:
-                # << operator is used to check the attribute at jth attribute 
+                # << operator is used to check the attribute at a^th attribute 
                 # the & operator returns 0 if the bitwise and operator is 0
 
                 if (self.relation_encoded[i] & (1 << j)) != 0:
-                    self.b_graph.add_edge(self.objects[i], self.attributes[j - 1])
+                    self.b_graph.add_edge(self.objects[i], self.attributes[a])
+                a += 1
                 j -= 1
  
         return self.b_graph
@@ -55,8 +56,8 @@ class BipartiteGraph:
                     pos,
                     with_labels=True,
                     node_color=["skyblue" if n in self.objects else "lightgreen" for n in self.b_graph.nodes()],
-                    node_size=1000
-                )
+                    node_size=4000
+                    )
         plt.title("Bipartite Graph")
         plt.show()
 
