@@ -18,21 +18,25 @@ class Encoder:
         if type(data) != pd.DataFrame:
             print("Unsupported Type!")
             return [np.asarray([])]
-        print(data.columns)
+
+
         attributes_ = np.asarray(data.columns[2:])
         objects_ = data[data.columns[1]].to_numpy()
         data = data[attributes_]
+
+
         relation_to_numpy = data.to_numpy()
-        relation_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy])
-        return [relation_encoded, objects_, attributes_]
+        object_attribute_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy])
+
+        return [object_attribute_encoded, object_attribute_encoded.T, objects_, attributes_]
     
-    def numpy_encoder(self, data) -> np.ndarray:
+    def numpy_encoder(self, data, objects_, attributes_) -> List[np.ndarray]:
         if type(data) != np.ndarray:
             print("Unsupported Type!")
-            return np.ndarray([])
+            return [np.ndarray([])]
         
         relation_encoded = np.asarray([self.bitset_from_row(row) for row in data])
-        return relation_encoded
+        return [relation_encoded, relation_encoded.T, objects_, attributes_]
 
                         
     def bitset_from_row(self, row):
