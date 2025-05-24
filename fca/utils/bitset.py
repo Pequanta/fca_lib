@@ -1,5 +1,4 @@
-from models import intModel
-
+from typing import List
 class BitSetOperations:
     """
         This class will handle initialization and different operations on binary relation sets.
@@ -43,14 +42,22 @@ checks if obj_one_attrs.set is a subset of obj_two_attrs.set
         return obj_one_attrs == obj_two_attrs
     
 
-    def union(self, obj_one_attrs: int, obj_two_attrs: int) -> int:
-        return obj_one_attrs & obj_two_attrs
+    def union(self, obj_attrs: List[int]) -> int:
+        result = obj_attrs[0]
+        for i in range(1, len(obj_attrs)):
+            result |= obj_attrs[i] 
+        return result
 
-    def intersection(self, obj_one_attrs: int, obj_two_attrs: int)-> int:
-        return obj_one_attrs | obj_two_attrs
-
-    def difference(self, obj_one_attrs: int, obj_two_attrs: int)-> int:
-        return obj_one_attrs ^ obj_two_attrs
+    def intersection(self, obj_attrs: List[int])-> int:
+        result = obj_attrs[0]
+        for i in range(1, len(obj_attrs)):
+            result &= obj_attrs[i] 
+        return result
+    def difference(self, obj_attrs: List[int])-> int:
+        result = obj_attrs[0]
+        for i in range(1, len(obj_attrs)):
+            result ^= obj_attrs[i] 
+        return result
 
     def symmetric_difference(self, obj_one_attrs: int, obj_two_attrs: int)-> int:
         
