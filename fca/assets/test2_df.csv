@@ -1,0 +1,9 @@
+,objects,needs water to live,lives in water,lives on land,needs chlorophyll,dicotyledon,monocotyledon,can move,has limbs,breast feeds
+0,fish leech,True,True,False,False,False,False,True,False,False
+1,bream,True,True,False,False,False,False,True,True,False
+2,frog,True,True,True,False,False,False,True,True,False
+3,dog,True,False,True,False,False,False,True,True,True
+4,water weeds,True,True,False,True,False,True,False,False,False
+5,reed,True,True,True,True,False,True,False,False,False
+6,bean,True,False,True,True,True,False,False,False,False
+7,corn,True,False,True,True,False,True,False,False,False

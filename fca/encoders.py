@@ -24,11 +24,12 @@ class Encoder:
         objects_ = data[data.columns[1]].to_numpy()
         data = data[attributes_]
 
-
+        
         relation_to_numpy = data.to_numpy()
+        
         object_attribute_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy])
-
-        return [object_attribute_encoded, object_attribute_encoded.T, objects_, attributes_]
+        attribute_object_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy.T])
+        return [object_attribute_encoded, attribute_object_encoded, objects_, attributes_]
     
     def numpy_encoder(self, data, objects_, attributes_) -> List[np.ndarray]:
         if type(data) != np.ndarray:
