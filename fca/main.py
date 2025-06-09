@@ -47,8 +47,10 @@ print(cont_temp)
 extent_lengths = {intent: len(extents) for intent, extents in cont_temp.items()}
 #print("location: ",  pos_location(extent_lengths))
 
-graph_ = OrderedGraph(extent_lengths, attributes_)
+#graph_ = OrderedGraph(extent_lengths, attributes_)
 #print("relationship: " , cont_temp)
 #graph.plot_graph()
-graph_.generate_graph()
+#graph_.generate_graph()
 #graph_2.plot_graph()
+
+graph.plot_graph()
