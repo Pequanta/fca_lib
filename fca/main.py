@@ -26,25 +26,26 @@ from numpy import sort
 import pandas as pd
 from graph_representations import BipartiteGraph, OrderedGraph
 from encoders import Encoder
-
+from concept_lattice import ConceptLattice
 
 encoder = Encoder()
 
-df = pd.read_csv("assets/test_df.csv")
+df_temp = pd.read_csv("assets/test_df.csv")
+df = df_temp[df_temp.columns[1:]]
 encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df)
-graph = BipartiteGraph(encoded_data, objects_, attributes_)
-graph_2 = BipartiteGraph(encoded_data_transposed, objects_, attributes_)
-
-graph_generated = graph.generate_graph()
-
-#this will hold the intensions with their connected extensions
-cont_temp = {intent: list(graph_generated.neighbors(intent)) for intent, d in graph_generated.nodes(data=True) if d["bipartite"] == 1}
-hold_lsts = []
-
+# graph = BipartiteGraph(encoded_data, objects_, attributes_)
+# graph_2 = BipartiteGraph(encoded_data_transposed, objects_, attributes_)
+#
+# graph_generated = graph.generate_graph()
+#
+# #this will hold the intensions with their connected extensions
+# cont_temp = {intent: list(graph_generated.neighbors(intent)) for intent, d in graph_generated.nodes(data=True) if d["bipartite"] == 1}
+# hold_lsts = []
+#
 #the following dictionary will held the length values for intents
-print(cont_temp)
+#print(cont_temp)
        
-extent_lengths = {intent: len(extents) for intent, extents in cont_temp.items()}
+#extent_lengths = {intent: len(extents) for intent, extents in cont_temp.items()}
 #print("location: ",  pos_location(extent_lengths))
 
 #graph_ = OrderedGraph(extent_lengths, attributes_)
@@ -52,5 +53,19 @@ extent_lengths = {intent: len(extents) for intent, extents in cont_temp.items()}
 #graph.plot_graph()
 #graph_.generate_graph()
 #graph_2.plot_graph()
+#print(extent_lengths)
+#graph.plot_graph()
 
-graph.plot_graph()
+print("#####")
+for i in range(len(encoded_data)):
+    print(bin(encoded_data[i]), sep=" ")
+print("#####")
+print("*****")
+for i in range(len(encoded_data_transposed)):
+    print(bin(encoded_data_transposed[i]), sep=" ")
+print("*****")
+
+concept_lattice = ConceptLattice(encoded_data_transposed, encoded_data, attributes_, objects_)
+
+concept_lattice.intent_hierarchy()
+

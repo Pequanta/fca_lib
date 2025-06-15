@@ -43,6 +43,8 @@ checks if obj_one_attrs.set is a subset of obj_two_attrs.set
     
 
     def union(self, obj_attrs: List[int]) -> int:
+        if len(obj_attrs) == 0:
+            return 0
         result = obj_attrs[0]
         for i in range(1, len(obj_attrs)):
             result |= obj_attrs[i] 

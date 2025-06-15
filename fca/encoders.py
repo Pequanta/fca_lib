@@ -20,13 +20,12 @@ class Encoder:
             return [np.asarray([])]
 
 
-        attributes_ = np.asarray(data.columns[2:])
+        attributes_ = np.asarray(data.columns[1:])
         objects_ = data[data.columns[1]].to_numpy()
         data = data[attributes_]
 
-        
+     
         relation_to_numpy = data.to_numpy()
-        
         object_attribute_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy])
         attribute_object_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy.T])
         return [object_attribute_encoded, attribute_object_encoded, objects_, attributes_]
@@ -50,6 +49,6 @@ class Encoder:
                 result |= hold
             index -= 1
             i += 1
-        return result
+        return result >> 1
 
 
