@@ -63,7 +63,7 @@ print("#####")
 print("*****")
 for i in range(len(encoded_data_transposed)):
     print(bin(encoded_data_transposed[i]), sep=" ")
-print("*****")
+print("")
 
 concept_lattice = ConceptLattice(encoded_data_transposed, encoded_data, attributes_, objects_)
 
