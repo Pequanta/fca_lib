@@ -27,7 +27,7 @@ import pandas as pd
 from graph_representations import BipartiteGraph, OrderedGraph
 from encoders import Encoder
 from concept_lattice import ConceptLattice
-
+from graph_representations import RandomGraph
 encoder = Encoder()
 
 df_temp = pd.read_csv("assets/test_df.csv")
@@ -67,5 +67,7 @@ print("")
 
 concept_lattice = ConceptLattice(encoded_data_transposed, encoded_data, attributes_, objects_)
 
-concept_lattice.intent_hierarchy()
+adj_list_temp = concept_lattice.intent_hierarchy()
 
+hierarchy_graph = RandomGraph(adj_list_temp)
+hierarchy_graph.plot_graph()

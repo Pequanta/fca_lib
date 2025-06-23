@@ -108,5 +108,21 @@ class OrderedGraph:
         nx.draw(self.graph, pos, with_labels=True, node_size=1000, alpha=0.5)
         
         plt.show()
+class RandomGraph:
+    def __init__(self, adjacency_list):
+        self.adjacency_list = adjacency_list
+
+    def plot_graph(self):
+        G = nx.Graph()
+        for node, neighbors in self.adjacency_list.items():
+            for neighbor in neighbors:
+                G.add_edge(node, neighbor)
+
+
+        plt.figure(figsize=(6, 4))
+        nx.draw(G, with_labels=True, node_color='lightblue', edge_color='gray', node_size=2000, font_size=15)
+        plt.title("Graph from Adjacency List")
+        plt.show()
+
 #if __name__=="__main__":
 #    inst = BipartiteGraph()

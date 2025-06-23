@@ -22,7 +22,7 @@ class ConceptLattice:
 
         for i in range(len(self.attr)):
             temp_hierarchy[self.attr[i]] = self.extent_union(i , self.intent_extent[i])
-        print(temp_hierarchy)
+
         return temp_hierarchy
     def extent_union(self, intent: int, extents: int):
         """
