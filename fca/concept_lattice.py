@@ -11,6 +11,61 @@ class ConceptLattice:
         self.extent_intent = extent_intent
         self.attr = attr
         self.obj = obj
+        # print("Intents: ", self.intent_extent)
+        # print("Extents: ", extent_intent)
+
+        # print("{")
+        # for i in range(len(self.attr)):
+        #     print(f"{self.attr[i]}: {np.binary_repr(self.intent_extent[i], width=5)}")
+
+
+    def extent_derivation_operator(self, attr_set: List[int]):
+        """
+            args:
+                a List of integers representing the indexes of the attributes in question
+            Returns:
+                a list of objects derived from passed attributes
+        """
+
+        common_objects = set_operations.intersection(attr_set)
+        result = []
+
+        index = 0 #keeps track of the index in the list
+        left_index = len(self.obj) #keeps track of the index in the binary representation of the integer
+
+        while left_index:
+            if ((1 << left_index) & common_objects) != 0:
+                result.append(self.obj[index])
+            left_index -= 1
+            index += 1
+        print(result)
+        return result 
+
+
+        
+
+    def intent_derivation_operator(self, obj_set: List[int]):
+        """
+            args:
+                an integer representing the index of the attribute in question
+            Returns:
+                a list of attributes dervied from passed objects
+        """
+
+        common_attributes = set_operations.intersection(obj_set) #an integer whose binar representation holds
+                                                                 #the indexes of objects common to the attributes
+        result = []
+
+        index = 0 #keeps track of the index in the list
+        left_index = len(self.attr) #keeps track of the index in the binary representation of the integer
+        while left_index:
+            if ((1 << left_index) & common_attributes) != 0:
+                result.append(index)
+            left_index -= 1
+            index += 1
+        
+        print(result)
+        return result
 
     def generate_lattice(self):
         pass
@@ -22,7 +77,7 @@ class ConceptLattice:
 
         for i in range(len(self.attr)):
             temp_hierarchy[self.attr[i]] = self.extent_union(i , self.intent_extent[i])
-
+        print(temp_hierarchy)
         return temp_hierarchy
     def extent_union(self, intent: int, extents: int):
         """
@@ -42,19 +97,17 @@ class ConceptLattice:
             i -= 1
             index += 1
             
-        print(np.binary_repr(extents, width = len(self.obj)), extent_lst)
-       
 
         intent_lst = [self.extent_intent[index] for index in extent_lst]
 
-        print(intent_lst) 
         intents_included = set_operations.union(intent_lst) #all intents that can be reached from the given intent
 
-        print("intents: " , np.binary_repr(intents_included, width=len(self.attr)))
         i = len(self.attr) - 1
         result = []
         index = 0
         while i >= 0:
+            #To be included in the intent's reach , the tables index of (row, column) = (intent, index) = True 
+            # and index should be different from the required intent's index 
             if ((1 << i) & intents_included != 0) and index != intent:
                 result.append(self.attr[index])
             index += 1
@@ -62,6 +115,7 @@ class ConceptLattice:
 
 
         return result
+    
     
 class ConceptLatticeOperations:
     def __init__(self):
