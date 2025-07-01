@@ -111,16 +111,33 @@ class OrderedGraph:
 class RandomGraph:
     def __init__(self, adjacency_list):
         self.adjacency_list = adjacency_list
+       
 
-    def plot_graph(self):
+    def plot_graph(self):   
         G = nx.Graph()
         for node, neighbors in self.adjacency_list.items():
             for neighbor in neighbors:
                 G.add_edge(node, neighbor)
 
+        attributes_sorted = sorted(self.adjacency_list.keys(), key=lambda x: len(self.adjacency_list[x]))
+        attributes_pos = {
+            attr: (0, len(self.adjacency_list[attr]))
+            for attr in attributes_sorted
+        }
+
+        prev = None
+        a = 0
+        for attr in attributes_pos:
+            if prev and prev != attributes_pos[attr][1]:
+                a = 0
+            else:
+                a += 1
+            prev = attributes_pos[attr][1]
+            attributes_pos[attr] = (a, attributes_pos[attr][1])
+ 
 
         plt.figure(figsize=(6, 4))
-        nx.draw(G, with_labels=True, node_color='lightblue', edge_color='gray', node_size=2000, font_size=15)
+        nx.draw(G, pos=attributes_pos,with_labels=True, node_color='lightblue', edge_color='gray', node_size=2000, font_size=15)
         plt.title("Graph from Adjacency List")
         plt.show()
 
