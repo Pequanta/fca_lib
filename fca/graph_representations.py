@@ -109,37 +109,95 @@ class OrderedGraph:
         
         plt.show()
 class RandomGraph:
-    def __init__(self, adjacency_list):
-        self.adjacency_list = adjacency_list
-       
+    def __init__(self, concepts, attributes, objects):
+        self.concepts = concepts
+        self.attributes = attributes
+        self.objects = objects
+    def bitset_to_attrset(self, bits: int) -> set[str]:
+        return {self.attributes[i] for i in range(len(self.attributes)) if bits & (1 << i)}
 
-    def plot_graph(self):   
-        G = nx.Graph()
-        for node, neighbors in self.adjacency_list.items():
-            for neighbor in neighbors:
-                G.add_edge(node, neighbor)
+    def bitset_to_objset(self, bits: int) -> set[str]:
+        return {self.objects[i] for i in range(len(self.objects)) if bits & (1 << i)}
+    def build_lattice_graph(self):
+        """
+        Builds a concept lattice (Hasse diagram) as a NetworkX graph.
+        
+        :param concepts: List of (intent_bitset, extent_bitset) pairs
+        :param attribute_order: Ordered list of attributes (used for sorting)
+        :return: (graph, pos, labels) tuple
+        """
+        # Convert bitsets to named sets
+        concepts = [(self.bitset_to_attrset(att), self.bitset_to_objset(obj)) for obj, att in self.concepts]
 
-        attributes_sorted = sorted(self.adjacency_list.keys(), key=lambda x: len(self.adjacency_list[x]))
-        attributes_pos = {
-            attr: (0, len(self.adjacency_list[attr]))
-            for attr in attributes_sorted
+        # Sort by size of intent, then lexicographically by attribute order
+        concepts = sorted(
+            concepts,
+            key=lambda c: (len(c[0]), [self.attributes.index(a) for a in sorted(c[0])])
+        )
+
+        G = nx.DiGraph()
+        node_map = {}
+
+        # Add nodes
+        for intent, extent in concepts:
+            node_id = frozenset(intent)
+            node_map[node_id] = (intent, extent)
+            G.add_node(node_id)
+
+        # Add edges: cover relations only
+        for i, (intent1, _) in enumerate(concepts):
+            for j, (intent2, _) in enumerate(concepts):
+                if i >= j:
+                    continue
+                if intent1 < intent2:
+                    is_cover = True
+                    for k, (intent3, _) in enumerate(concepts):
+                        if intent1 < intent3 < intent2:
+                            is_cover = False
+                            break
+                    if is_cover:
+                        G.add_edge(frozenset(intent2), frozenset(intent1))  # top-down
+
+        # Compute layout positions (layered by intent size)
+        pos = {}
+        layers = {}
+        for node in G.nodes:
+            layer = len(node)
+            layers.setdefault(layer, []).append(node)
+
+        for layer, nodes in layers.items():
+            for i, node in enumerate(nodes):
+                pos[node] = (i * 2, -layer)
+
+        # Build labels
+        labels = {
+            node: f"I: {{{', '.join(sorted(node_map[node][0]))}}}\nE: {{{', '.join(sorted(node_map[node][1]))}}}"
+            for node in G.nodes
         }
 
-        prev = None
-        a = 0
-        for attr in attributes_pos:
-            if prev and prev != attributes_pos[attr][1]:
-                a = 0
-            else:
-                a += 1
-            prev = attributes_pos[attr][1]
-            attributes_pos[attr] = (a, attributes_pos[attr][1])
- 
-
-        plt.figure(figsize=(6, 4))
-        nx.draw(G, pos=attributes_pos,with_labels=True, node_color='lightblue', edge_color='gray', node_size=2000, font_size=15)
-        plt.title("Graph from Adjacency List")
+        return G, pos, labels
+    def plot_graph(self):
+        G, pos, labels = self.build_lattice_graph()
+        plt.figure(figsize=(12, 8))
+        nx.draw(
+            G,
+            pos,
+            labels=labels,
+            with_labels=True,
+            node_color="#add8e6",
+            node_size=1800,
+            font_size=10,
+            font_family="monospace",
+            font_weight="bold",
+            edge_color="gray",
+        )
+        plt.title("Concept Lattice (Hasse Diagram)")
+        plt.axis("off")
+        plt.tight_layout()
         plt.show()
+
+
+
 
 #if __name__=="__main__":
 #    inst = BipartiteGraph()
