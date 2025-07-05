@@ -30,13 +30,20 @@ from concept_lattice import ConceptLattice
 from graph_representations import RandomGraph
 encoder = Encoder()
 
+
 df_temp = pd.read_csv("assets/test_df.csv")
+new_df = pd.read_csv("assets/test_2_df.csv")
 df = df_temp[df_temp.columns[1:]]
 encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df)
-# graph = BipartiteGraph(encoded_data, objects_, attributes_)
-# graph_2 = BipartiteGraph(encoded_data_transposed, objects_, attributes_)
-#
-# graph_generated = graph.generate_graph()
+
+# df = new_df[new_df.columns[1:]]
+# encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df)
+
+# graph = BipartiteGraph(encoded_data_transposed, objects_, attributes_)
+
+
+# graph.generate_graph()
+# graph.plot_graph()
 #
 # #this will hold the intensions with their connected extensions
 # cont_temp = {intent: list(graph_generated.neighbors(intent)) for intent, d in graph_generated.nodes(data=True) if d["bipartite"] == 1}
@@ -56,18 +63,18 @@ encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_en
 #print(extent_lengths)
 #graph.plot_graph()
 
-print("#####")
-for i in range(len(encoded_data)):
-    print(bin(encoded_data[i]), sep=" ")
-print("#####")
-print("*****")
-for i in range(len(encoded_data_transposed)):
-    print(bin(encoded_data_transposed[i]), sep=" ")
-print("")
+# print("#####")
+# for i in range(len(encoded_data)):
+#     print(bin(encoded_data[i]), sep=" ")
+# print("#####")
+# print("*****")
+# for i in range(len(encoded_data_transposed)):
+#     print(bin(encoded_data_transposed[i]), sep=" ")
+# print("")
 
-concept_lattice = ConceptLattice(encoded_data_transposed, encoded_data, attributes_, objects_)
-
-adj_list_temp = concept_lattice.intent_hierarchy()
-
-hierarchy_graph = RandomGraph(adj_list_temp)
-hierarchy_graph.plot_graph()
+concept_lattice = ConceptLattice(encoded_data, encoded_data_transposed, objects_,attributes_)
+concepts = concept_lattice.all_concepts()
+graph_ = RandomGraph(concepts, list(attributes_), list(objects_))
+graph_.build_lattice_graph()
+graph_.plot_graph()
+# hierarchy_graph.plot_graph()
