@@ -21,7 +21,7 @@ class Encoder:
 
 
         attributes_ = np.asarray(data.columns[1:])
-        objects_ = data[data.columns[1]].to_numpy()
+        objects_ = data[data.columns[0]].to_numpy()
         data = data[attributes_]
 
      
@@ -30,25 +30,23 @@ class Encoder:
         attribute_object_encoded = np.asarray([self.bitset_from_row(row) for row in relation_to_numpy.T])
         return [object_attribute_encoded, attribute_object_encoded, objects_, attributes_]
     
-    def numpy_encoder(self, data, objects_, attributes_) -> List[np.ndarray]:
+    def numpy_encoder(self, data) -> List[np.ndarray]:
         if type(data) != np.ndarray:
             print("Unsupported Type!")
             return [np.ndarray([])]
-        
-        relation_encoded = np.asarray([self.bitset_from_row(row) for row in data])
-        return [relation_encoded, relation_encoded.T, objects_, attributes_]
-
-                        
+        attributes_ = data[0][2:]
+        objects_ = np.asarray([data[i][1] for i in range(1, len(data))])
+        relation_encoded = np.asarray([self.bitset_from_row(row[1:]) for row in data[1:]])
+        inverse_relation_encoded = np.asarray([self.bitset_from_row(row[1:]) for row in data.T[2:]])
+        return [relation_encoded,inverse_relation_encoded , objects_, attributes_]
+                   
     def bitset_from_row(self, row):
-        index = len(row) # the bit field length
-        result = 0
+        result = (1 << len(row)) - 1
         i = 0
-        while index > 0:
-            if row[i]:
-                hold = 1 << index #to reach to the index that describes the relation between the object and the attribute of row[index]
-                result |= hold
-            index -= 1
+        while i < len(row):
+            if row[i] not in {'True', True, 'X', 'x'}:
+                result ^= (1 << i)
             i += 1
-        return result >> 1
+        return result
 
 
