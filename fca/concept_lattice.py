@@ -1,123 +1,85 @@
 import numpy as np
-from typing import List, Set
+from typing import List, Set, Tuple
 from utils.bitset import BitSetOperations
 
 
 set_operations = BitSetOperations()
 
 class ConceptLattice:
-    def __init__(self, intent_extent: np.ndarray, extent_intent: np.ndarray, attr: np.ndarray, obj: np.ndarray):
-        self.intent_extent = intent_extent
-        self.extent_intent = extent_intent
-        self.attr = attr
-        self.obj = obj
-        # print("Intents: ", self.intent_extent)
-        # print("Extents: ", extent_intent)
-
-        # print("{")
-        # for i in range(len(self.attr)):
-        #     print(f"{self.attr[i]}: {np.binary_repr(self.intent_extent[i], width=5)}")
-
-
-    def extent_derivation_operator(self, attr_set: List[int]):
+    def __init__(self,extent_intent, intent_extent, objects_, attributes_):
         """
-            args:
-                a List of integers representing the indexes of the attributes in question
-            Returns:
-                a list of objects derived from passed attributes
+        :param context: dict mapping object name → set of attribute names
         """
+        self.objects = objects_
+        self.attributes = attributes_
+        self.num_objects = len(self.objects)
+        self.num_attributes = len(self.attributes)
 
-        common_objects = set_operations.intersection(attr_set)
-        result = []
+        # Mappings
+        self.obj_to_index = {obj: i for i, obj in enumerate(self.objects)}
+        self.attr_to_index = {attr: i for i, attr in enumerate(self.attributes)}
 
-        index = 0 #keeps track of the index in the list
-        left_index = len(self.obj) #keeps track of the index in the binary representation of the integer
-
-        while left_index:
-            if ((1 << left_index) & common_objects) != 0:
-                result.append(self.obj[index])
-            left_index -= 1
-            index += 1
-        print(result)
-        return result 
+        # Compute bit-columns for attributes and bit-rows for objects
+        self.attribute_bit_columns = intent_extent
+        self.object_bit_rows = extent_intent
 
 
-        
 
-    def intent_derivation_operator(self, obj_set: List[int]):
+    def _intent_closure_bitset(self, bitset: int) -> int:
         """
-            args:
-                an integer representing the index of the attribute in question
-            Returns:
-                a list of attributes dervied from passed objects
+        Closure of an intent (attribute bitset) → intent (attribute bitset)
         """
+        # Get common objects
+        extent_bits = (1 << self.num_objects) - 1
+        for i in range(self.num_attributes):
+            if bitset & (1 << i):
+                extent_bits &= self.attribute_bit_columns[i]
 
-        common_attributes = set_operations.intersection(obj_set) #an integer whose binar representation holds
-                                                                 #the indexes of objects common to the attributes
-        result = []
+        # Intersect all attributes of the objects in the extent
+        closed_intent = (1 << self.num_attributes) - 1
+        for obj_idx in range(self.num_objects):
+            if extent_bits & (1 << obj_idx):
+                closed_intent &= self.object_bit_rows[obj_idx]
 
-        index = 0 #keeps track of the index in the list
-        left_index = len(self.attr) #keeps track of the index in the binary representation of the integer
-        while left_index:
-            if ((1 << left_index) & common_attributes) != 0:
-                result.append(index)
-            left_index -= 1
-            index += 1
-        
-        print(result)
-        return result
+        return closed_intent
 
-    def generate_lattice(self):
-        pass
-
-
-    def intent_hierarchy(self):
-        temp_hierarchy = {}
-        
-
-        for i in range(len(self.attr)):
-            temp_hierarchy[self.attr[i]] = self.extent_union(i , self.intent_extent[i])
-        print(temp_hierarchy)
-        return temp_hierarchy
-    def extent_union(self, intent: int, extents: int):
+    def _next_closure_bitset(self, A: int) -> int | None:
         """
-            Args:
-                extents: binary representation of the extents held by the requested intent
-            result:
-                result: an array containing reachable intents resulted from the union of intents held by the extents passed in the arg.
+        Computes the next lectically closed attribute set after A (bitset)
         """
-        #print(bin(extents))
-        i = len(self.obj) - 1
-        ##The following list will contain the extents extracted from the binary representations passed through the argument
-        extent_lst = []
-        index = 0 
-        while i >= 0:
-            if ((1 << i) & extents) != 0:
-                extent_lst.append(index)
-            i -= 1
-            index += 1
-            
-
-        intent_lst = [self.extent_intent[index] for index in extent_lst]
-
-        intents_included = set_operations.union(intent_lst) #all intents that can be reached from the given intent
-
-        i = len(self.attr) - 1
-        result = []
-        index = 0
-        while i >= 0:
-            #To be included in the intent's reach , the tables index of (row, column) = (intent, index) = True 
-            # and index should be different from the required intent's index 
-            if ((1 << i) & intents_included != 0) and index != intent:
-                result.append(self.attr[index])
-            index += 1
-            i -= 1
+        n = self.num_attributes
+        for i in reversed(range(n)):
+            mask = 1 << i
+            if A & mask:
+                A &= ~mask
+            else:
+                candidate = A | mask
+                closed = self._intent_closure_bitset(candidate)
+                if (closed & ~A) & ((1 << i) - 1) == 0:
+                    return closed
+        return None
 
 
-        return result
     
-    
-class ConceptLatticeOperations:
-    def __init__(self):
-        pass
+    def all_concepts(self) -> list[tuple[set[str], set[str]]]:
+        concepts = []
+        seen = set()
+        current = 0
+
+        while current is not None:
+            closed = self._intent_closure_bitset(current)
+            if closed not in seen:
+                seen.add(closed)
+
+                extent_bits = (1 << self.num_objects) - 1
+                for i in range(self.num_attributes):
+                    if closed & (1 << i):
+                        extent_bits &= self.attribute_bit_columns[i]
+
+                concepts.append((extent_bits, closed))
+
+            current = self._next_closure_bitset(current)
+
+        return concepts
+
 
