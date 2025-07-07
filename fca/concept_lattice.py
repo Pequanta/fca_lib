@@ -8,7 +8,15 @@ set_operations = BitSetOperations()
 class ConceptLattice:
     def __init__(self,extent_intent, intent_extent, objects_, attributes_):
         """
-        :param context: dict mapping object name → set of attribute names
+            Args:
+                extent_intent: a list where the index indicates the index of an object
+                                and the binary representation of the value indicates the 
+                                intents held by the object
+                intent_extent: same as the extent_intent with roles reversed
+
+                objects_: list of labeled objects
+
+                attributes: list of labeled attributes
         """
         self.objects = objects_
         self.attributes = attributes_
@@ -27,7 +35,11 @@ class ConceptLattice:
 
     def _intent_closure_bitset(self, bitset: int) -> int:
         """
-        Closure of an intent (attribute bitset) → intent (attribute bitset)
+        Args:
+            pass
+        Returns:
+            pass    
+        
         """
         # Get common objects
         extent_bits = (1 << self.num_objects) - 1
@@ -40,12 +52,11 @@ class ConceptLattice:
         for obj_idx in range(self.num_objects):
             if extent_bits & (1 << obj_idx):
                 closed_intent &= self.object_bit_rows[obj_idx]
-
         return closed_intent
 
     def _next_closure_bitset(self, A: int) -> int | None:
         """
-        Computes the next lectically closed attribute set after A (bitset)
+        Computes the next lectically closed attribute set after A (bitset)x
         """
         n = self.num_attributes
         for i in reversed(range(n)):
