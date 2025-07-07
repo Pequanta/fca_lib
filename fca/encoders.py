@@ -20,8 +20,9 @@ class Encoder:
             return [np.asarray([])]
 
 
-        attributes_ = np.asarray(data.columns[1:])
-        objects_ = data[data.columns[0]].to_numpy()
+        attributes_ = np.asarray(data.columns[2:])
+
+        objects_ = data[data.columns[1]].to_numpy()
         data = data[attributes_]
 
      
@@ -44,7 +45,7 @@ class Encoder:
         result = (1 << len(row)) - 1
         i = 0
         while i < len(row):
-            if row[i] not in {'True', True, 'X', 'x'}:
+            if row[i] not in {'True', True, 'X', 'x', '1', 1}:
                 result ^= (1 << i)
             i += 1
         return result
