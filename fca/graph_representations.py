@@ -161,13 +161,20 @@ class RandomGraph:
         # Compute layout positions (layered by intent size)
         pos = {}
         layers = {}
+
+        # Group nodes by layer (based on length)
         for node in G.nodes:
             layer = len(node)
             layers.setdefault(layer, []).append(node)
 
+        # Assign positions
         for layer, nodes in layers.items():
+            n = len(nodes)
+            offset = -(n - 1)  # This centers the layer horizontally
             for i, node in enumerate(nodes):
-                pos[node] = (i * 2, -layer)
+                x = (i * 2) + offset  # Centering
+                y = -layer
+                pos[node] = (x, y)
 
         # Build labels
         labels = {
@@ -176,6 +183,7 @@ class RandomGraph:
         }
 
         return G, pos, labels
+
     def plot_graph(self):
         G, pos, labels = self.build_lattice_graph()
         plt.figure(figsize=(12, 8))
