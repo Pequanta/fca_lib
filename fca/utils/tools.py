@@ -1,7 +1,8 @@
-def count_ones(num: int) -> int:
-    hold = 1
-    count = 0
-    while num > 0:
-        count += hold & num
-        num >>= 1
-    return count
+def count_ones(n: int) -> int:
+    n = n & 0xFFFFFFFF  # ensure 32-bit representation
+    n = n - ((n >> 1) & 0x55555555)
+    n = (n & 0x33333333) + ((n >> 2) & 0x33333333)
+    n = (n + (n >> 4)) & 0x0F0F0F0F
+    n = n + (n >> 8)
+    n = n + (n >> 16)
+    return n & 0x3F
