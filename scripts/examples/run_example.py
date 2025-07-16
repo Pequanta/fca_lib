@@ -1,7 +1,4 @@
-
 import os, sys
-
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../fca')))
 
 import numpy as np
@@ -12,7 +9,7 @@ from fca.graph_representations import RandomGraph
 from fca.algorithms.iceberg_concept import IcebergConcept
 from fca.qubo_formulation.qubo_formulations import QuboFormulation
 from fca.qubo_formulation.classical_solutions import ClassicalSolutions
-
+from fca.graph_representations import BipartiteGraph
 
 
 encoder = Encoder()
@@ -32,6 +29,10 @@ concept_lattice = ConceptLattice(encoded_data, encoded_data_transposed, objects_
 concepts = concept_lattice.all_concepts()
 # print(concepts)
 graph_ = RandomGraph(concepts, list(attributes_), list(objects_))
+# graph_2 = BipartiteGraph(encoded_data, attributes_, objects_)
+# graph_2.generate_graph()
+# graph_2.plot_graph()
+
 # g_ , p_ , l_ = graph_.build_lattice_graph()
 # graph_.plot_graph()
 
@@ -49,5 +50,4 @@ print(qubo_formulation.build_iceberg_qubo(concepts, 2)) # type: ignore
 print("QUBO Matrix Shape: ", qubo_formulation.build_iceberg_qubo(concepts, 2).shape) # type: ignore
 print("Classical Solutions: ") # type: ignore
 print(classical_solutions.solve_qubo_brute_force(qubo_formulation.build_iceberg_qubo(concepts, 2))) # type: ignore
-print(concepts) # type: ignore
-print()
+# graph_.plot_graph()
