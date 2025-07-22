@@ -33,21 +33,25 @@ graph_ = RandomGraph(concepts, list(attributes_), list(objects_))
 # graph_2.generate_graph()
 # graph_2.plot_graph()
 
-# g_ , p_ , l_ = graph_.build_lattice_graph()
-# graph_.plot_graph()
+g_ , p_ , l_ = graph_.build_lattice_graph()
+print(g_.nodes)
+print(g_.nodes)
+print(p_)
 
-print(concepts)
+graph_.plot_graph()
 # iceberg_concepts = IcebergConcept()
 # print(iceberg_concepts.extract_iceberg_concepts(g_, 2))
 
 
-qubo_formulation = QuboFormulation()
-classical_solutions = ClassicalSolutions()
-print("Iceberg Concepts: ", IcebergConcept().extract_iceberg_concepts(concepts, 2)) # type: ignore
-print("QUBO Matrix: ") # type: ignore
-np.set_printoptions(precision=2, suppress=True)
-print(qubo_formulation.build_iceberg_qubo(concepts, 2)) # type: ignore
-print("QUBO Matrix Shape: ", qubo_formulation.build_iceberg_qubo(concepts, 2).shape) # type: ignore
-print("Classical Solutions: ") # type: ignore
-print(classical_solutions.solve_qubo_brute_force(qubo_formulation.build_iceberg_qubo(concepts, 2))) # type: ignore
-# graph_.plot_graph()
+# qubo_formulation = QuboFormulation()
+# classical_solutions = ClassicalSolutions()
+# print("Iceberg Concepts: ", IcebergConcept().extract_iceberg_concepts(concepts, 2)) # type: ignore
+# print("QUBO Matrix: ") # type: ignore
+# np.set_printoptions(precision=2, suppress=True)
+# print(qubo_formulation.build_iceberg_qubo(concepts, 2)) # type: ignore
+# print("QUBO Matrix Shape: ", qubo_formulation.build_iceberg_qubo(concepts, 2).shape) # type: ignore
+# print("Classical Solutions: ") # type: ignore
+# print(classical_solutions.solve_qubo_brute_force(qubo_formulation.build_iceberg_qubo(concepts, 2))) # type: ignore
+# # graph_.plot_graph()
+
+
