@@ -1,8 +1,12 @@
 pandas
 numpy
 matplotlib
+<<<<<<< HEAD
 networkx
 python-decouple
 
 ##The following should hold the installation guide for qci-client
 pip install --upgrade "qci-client>=4"
+=======
+networkx
+>>>>>>> dev-packaging
