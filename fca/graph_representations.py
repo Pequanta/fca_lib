@@ -60,54 +60,6 @@ class BipartiteGraph:
                     )
         plt.title("Bipartite Graph")
         plt.show()
-class OrderedGraph:
-    def __init__(self, intent_with_extent_length, nodes):
-        
-        self.graph = nx.Graph()
-        self.extent_lengths = intent_with_extent_length
-        self.graph.add_nodes_from(nodes)
-    
-    def create_an_edge(self):
-        pass
-
-    def pos_location(self, extent_lengths):
-        """
-            Args:
-                extent_lengths: a dictionary containing intents : len(extents encompassed directly by the intent)
-            Output:
-                pos_dictionary: a dictionary containing pos: List[intents] indicating relative positions for the intents in the lattice graph
-        """
-        y = 0
-        sorted_intents = sorted(extent_lengths.keys(), key = lambda x: extent_lengths[x])
-        mid_length = max(extent_lengths.values()) // 2 
-        pos_temp_dictionary = {}
-        prev = None
-        for i in range(len(sorted_intents)):
-            pos_ = extent_lengths[sorted_intents[i]]
-            if prev and pos_ != prev:
-                y += 1
-                pos_temp_dictionary[y] = [sorted_intents[i]]
-            elif not prev:
-                pos_temp_dictionary[0] = [sorted_intents[i]]
-            else:
-                pos_temp_dictionary[y].append(sorted_intents[i])
-            prev = pos_
-
-        pos_dictionary = {}
-        prev = None
-        for length in pos_temp_dictionary:
-            x = 0
-            for element in pos_temp_dictionary[length]:
-                   pos_dictionary[element] = (x, y)
-                   x += 1
-            y += 1
-        return pos_dictionary
-    def generate_graph(self):
-        pos = self.pos_location(self.extent_lengths)
-        self.graph.add_nodes_from(self.extent_lengths)
-        nx.draw(self.graph, pos, with_labels=True, node_size=1000, alpha=0.5)
-        
-        plt.show()
 class RandomGraph:
     def __init__(self, concepts, attributes, objects):
         self.concepts = concepts
