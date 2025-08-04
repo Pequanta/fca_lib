@@ -78,36 +78,3 @@ class PreprocessingJSM:
         return learning_context
     
     
-    def get_hypotheses(self):
-        """
-            Args:
-                pass
-            Returns:
-                a set containing all of possible hypotheses
-        """
-        pos_contetxt, negative_context, _  = self.process_data()
-
-        candidate_hyp = set() 
-        for i in range(len(pos_contetxt)):
-             for j in range(len(negative_context)):
-                 if not bset_operations.__subset_of__(pos_contetxt[i], negative_context[j]):
-                    candidate_hyp.add(pos_contetxt[i])
-        return candidate_hyp
-    
-
-    def get_prehypotheses(self):
-        """
-            Args:
-                pass
-            Returns:
-                a set containing all of possible prehypotheses
-        """
-        pos_contetxt, negative_context, _  = self.process_data()
-
-        candidate_pre_hyp = set() 
-        for i in range(len(pos_contetxt)):
-             for j in range(len(negative_context)):
-                 if not (pos_contetxt[i] == negative_context[i]):
-                    candidate_pre_hyp.add(pos_contetxt[i])
-        return candidate_pre_hyp
-    
