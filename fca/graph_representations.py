@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt 
-from utils.tools import count_ones
+
 
 matplotlib.use("TkAgg")
 class BipartiteGraph:
@@ -126,36 +126,37 @@ class RandomGraph:
         :param attribute_order: Ordered list of attributes (used for sorting)
         :return: (graph, pos, labels) tuple
         """
-        concepts = [(obj, att) for obj, att in self.concepts]  # Keep as bitsets
-        print(concepts)
-        # Sort by intent size (ascending)
-        concepts.sort(key=lambda c: count_ones(c[1]))
+        # Convert bitsets to named sets
+        concepts = [(self.bitset_to_attrset(att), self.bitset_to_objset(obj)) for obj, att in self.concepts]
+
+        # Sort by size of intent, then lexicographically by attribute order
+        concepts = sorted(
+            concepts,
+            key=lambda c: (len(c[0]), [self.attributes.index(a) for a in sorted(c[0])])
+        )
 
         G = nx.DiGraph()
         node_map = {}
 
         # Add nodes
-        for obj, att in concepts:
-            node_id = att
-            node_map[node_id] = (obj, att)
+        for intent, extent in concepts:
+            node_id = frozenset(intent)
+            node_map[node_id] = (intent, extent)
             G.add_node(node_id)
-        # Build covering relations using bitwise subset logic
-        for i, (obj1, att1) in enumerate(concepts):
-            for j in range(i + 1, len(concepts)):
-                obj2, att2 = concepts[j]
 
-                # Check if att1 ⊂ att2
-                if att1 & att2 == att1 and att1 != att2:
-                    # Check cover condition: no intermediate concept between att1 and att2
+        # Add edges: cover relations only
+        for i, (intent1, _) in enumerate(concepts):
+            for j, (intent2, _) in enumerate(concepts):
+                if i >= j:
+                    continue
+                if intent1 < intent2:
                     is_cover = True
-                    for k in range(i + 1, j):
-                        _, att3 = concepts[k]
-                        if att1 & att3 == att1 and att3 & att2 == att3:
+                    for k, (intent3, _) in enumerate(concepts):
+                        if intent1 < intent3 < intent2:
                             is_cover = False
                             break
                     if is_cover:
-                        G.add_edge(att2, att1)  # top-down
-
+                        G.add_edge(frozenset(intent2), frozenset(intent1))  # top-down
 
         # Compute layout positions (layered by intent size)
         pos = {}
@@ -163,10 +164,10 @@ class RandomGraph:
 
         # Group nodes by layer (based on length)
         for node in G.nodes:
-            layer = count_ones(node)
+            layer = len(node)
             layers.setdefault(layer, []).append(node)
 
-        # Assigning positions
+        # Assign positions
         for layer, nodes in layers.items():
             n = len(nodes)
             offset = -(n - 1)  # This centers the layer horizontally
@@ -174,9 +175,10 @@ class RandomGraph:
                 x = (i * 2) + offset  # Centering
                 y = -layer
                 pos[node] = (x, y)
-        # Building labels
+
+        # Build labels
         labels = {
-            node: f"I: {{{', '.join(sorted(self.bitset_to_attrset(node_map[node][1])))}}}\nE: {{{', '.join(sorted(self.bitset_to_objset(node_map[node][0])))}}}"
+            node: f"I: {{{', '.join(sorted(node_map[node][0]))}}}\nE: {{{', '.join(sorted(node_map[node][1]))}}}"
             for node in G.nodes
         }
 

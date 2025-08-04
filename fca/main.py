@@ -1,53 +1,80 @@
+# #from lattice import ConceptLattice
+# from encoders import Encoder
+#
+#
+#
+# from ucimlrepo import fetch_ucirepo
+#
+# # fetch dataset
+#
+# zoo = fetch_ucirepo(id=111)
+#
+# # data (as pandas dataframes)
+# X = zoo.data.features
+# X.drop(columns=["legs"], inplace=True)
+# y = zoo.data.targets
+#
+#
+# encoder_  = Encoder()
+# hold_res = encoder_.pandas_encoder(X)
+#
+# print(hold_res, len(hold_res))
+# #print(*hold_res, sep="\n")
 
-import os, sys
 
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
-
-import numpy as np
+from numpy import sort
 import pandas as pd
-from fca.encoders import Encoder
-from fca.concept_lattice import ConceptLattice
-from fca.graph_representations import RandomGraph
-from fca.algorithms.iceberg_concept import IcebergConcept
-from fca.qubo_formulation.qubo_formulations import QuboFormulation
-from fca.qubo_formulation.classical_solutions import ClassicalSolutions
-
-
-
+from graph_representations import BipartiteGraph, OrderedGraph
+from encoders import Encoder
+from concept_lattice import ConceptLattice
+from graph_representations import RandomGraph
 encoder = Encoder()
 
 
 df_temp = pd.read_csv("assets/test_df.csv")
-df_temp.drop(df_temp.columns[7:], axis=1, inplace=True)
-df_temp = df_temp.iloc[:10]
-print(df_temp.shape)
-encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df_temp)
+new_df = pd.read_csv("assets/test_2_df.csv")
+df = df_temp[df_temp.columns[1:]]
+encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df)
 
-encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df_temp)
+# df = new_df[new_df.columns[1:]]
+# encoded_data, encoded_data_transposed, objects_, attributes_ = encoder.pandas_encoder(df)
 
-cont_test = list(map(lambda x: np.binary_repr(x, width=len(attributes_)), encoded_data))
+# graph = BipartiteGraph(encoded_data_transposed, objects_, attributes_)
+
+
+# graph.generate_graph()
+# graph.plot_graph()
+#
+# #this will hold the intensions with their connected extensions
+# cont_temp = {intent: list(graph_generated.neighbors(intent)) for intent, d in graph_generated.nodes(data=True) if d["bipartite"] == 1}
+# hold_lsts = []
+#
+#the following dictionary will held the length values for intents
+#print(cont_temp)
+       
+#extent_lengths = {intent: len(extents) for intent, extents in cont_temp.items()}
+#print("location: ",  pos_location(extent_lengths))
+
+#graph_ = OrderedGraph(extent_lengths, attributes_)
+#print("relationship: " , cont_temp)
+#graph.plot_graph()
+#graph_.generate_graph()
+#graph_2.plot_graph()
+#print(extent_lengths)
+#graph.plot_graph()
+
+# print("#####")
+# for i in range(len(encoded_data)):
+#     print(bin(encoded_data[i]), sep=" ")
+# print("#####")
+# print("*****")
+# for i in range(len(encoded_data_transposed)):
+#     print(bin(encoded_data_transposed[i]), sep=" ")
+# print("")
 
 concept_lattice = ConceptLattice(encoded_data, encoded_data_transposed, objects_,attributes_)
 concepts = concept_lattice.all_concepts()
-# print(concepts)
 graph_ = RandomGraph(concepts, list(attributes_), list(objects_))
-# g_ , p_ , l_ = graph_.build_lattice_graph()
-# graph_.plot_graph()
-
-print(concepts)
-# iceberg_concepts = IcebergConcept()
-# print(iceberg_concepts.extract_iceberg_concepts(g_, 2))
-
-
-qubo_formulation = QuboFormulation()
-classical_solutions = ClassicalSolutions()
-print("Iceberg Concepts: ", IcebergConcept().extract_iceberg_concepts(concepts, 2)) # type: ignore
-print("QUBO Matrix: ") # type: ignore
-np.set_printoptions(precision=2, suppress=True)
-print(qubo_formulation.build_iceberg_qubo(concepts, 2)) # type: ignore
-print("QUBO Matrix Shape: ", qubo_formulation.build_iceberg_qubo(concepts, 2).shape) # type: ignore
-print("Classical Solutions: ") # type: ignore
-print(classical_solutions.solve_qubo_brute_force(qubo_formulation.build_iceberg_qubo(concepts, 2))) # type: ignore
-print(concepts) # type: ignore
-print()
+graph_.build_lattice_graph()
+graph_.plot_graph()
+# hierarchy_graph.plot_graph()
