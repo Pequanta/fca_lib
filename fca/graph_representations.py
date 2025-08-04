@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt 
-
+from utils.tools import count_ones
 
 matplotlib.use("TkAgg")
 class BipartiteGraph:
@@ -60,54 +60,6 @@ class BipartiteGraph:
                     )
         plt.title("Bipartite Graph")
         plt.show()
-class OrderedGraph:
-    def __init__(self, intent_with_extent_length, nodes):
-        
-        self.graph = nx.Graph()
-        self.extent_lengths = intent_with_extent_length
-        self.graph.add_nodes_from(nodes)
-    
-    def create_an_edge(self):
-        pass
-
-    def pos_location(self, extent_lengths):
-        """
-            Args:
-                extent_lengths: a dictionary containing intents : len(extents encompassed directly by the intent)
-            Output:
-                pos_dictionary: a dictionary containing pos: List[intents] indicating relative positions for the intents in the lattice graph
-        """
-        y = 0
-        sorted_intents = sorted(extent_lengths.keys(), key = lambda x: extent_lengths[x])
-        mid_length = max(extent_lengths.values()) // 2 
-        pos_temp_dictionary = {}
-        prev = None
-        for i in range(len(sorted_intents)):
-            pos_ = extent_lengths[sorted_intents[i]]
-            if prev and pos_ != prev:
-                y += 1
-                pos_temp_dictionary[y] = [sorted_intents[i]]
-            elif not prev:
-                pos_temp_dictionary[0] = [sorted_intents[i]]
-            else:
-                pos_temp_dictionary[y].append(sorted_intents[i])
-            prev = pos_
-
-        pos_dictionary = {}
-        prev = None
-        for length in pos_temp_dictionary:
-            x = 0
-            for element in pos_temp_dictionary[length]:
-                   pos_dictionary[element] = (x, y)
-                   x += 1
-            y += 1
-        return pos_dictionary
-    def generate_graph(self):
-        pos = self.pos_location(self.extent_lengths)
-        self.graph.add_nodes_from(self.extent_lengths)
-        nx.draw(self.graph, pos, with_labels=True, node_size=1000, alpha=0.5)
-        
-        plt.show()
 class RandomGraph:
     def __init__(self, concepts, attributes, objects):
         self.concepts = concepts
@@ -126,37 +78,36 @@ class RandomGraph:
         :param attribute_order: Ordered list of attributes (used for sorting)
         :return: (graph, pos, labels) tuple
         """
-        # Convert bitsets to named sets
-        concepts = [(self.bitset_to_attrset(att), self.bitset_to_objset(obj)) for obj, att in self.concepts]
-
-        # Sort by size of intent, then lexicographically by attribute order
-        concepts = sorted(
-            concepts,
-            key=lambda c: (len(c[0]), [self.attributes.index(a) for a in sorted(c[0])])
-        )
+        concepts = [(obj, att) for obj, att in self.concepts]  # Keep as bitsets
+        print(concepts)
+        # Sort by intent size (ascending)
+        concepts.sort(key=lambda c: count_ones(c[1]))
 
         G = nx.DiGraph()
         node_map = {}
 
         # Add nodes
-        for intent, extent in concepts:
-            node_id = frozenset(intent)
-            node_map[node_id] = (intent, extent)
+        for obj, att in concepts:
+            node_id = att
+            node_map[node_id] = (obj, att)
             G.add_node(node_id)
+        # Build covering relations using bitwise subset logic
+        for i, (obj1, att1) in enumerate(concepts):
+            for j in range(i + 1, len(concepts)):
+                obj2, att2 = concepts[j]
 
-        # Add edges: cover relations only
-        for i, (intent1, _) in enumerate(concepts):
-            for j, (intent2, _) in enumerate(concepts):
-                if i >= j:
-                    continue
-                if intent1 < intent2:
+                # Check if att1 ⊂ att2
+                if att1 & att2 == att1 and att1 != att2:
+                    # Check cover condition: no intermediate concept between att1 and att2
                     is_cover = True
-                    for k, (intent3, _) in enumerate(concepts):
-                        if intent1 < intent3 < intent2:
+                    for k in range(i + 1, j):
+                        _, att3 = concepts[k]
+                        if att1 & att3 == att1 and att3 & att2 == att3:
                             is_cover = False
                             break
                     if is_cover:
-                        G.add_edge(frozenset(intent2), frozenset(intent1))  # top-down
+                        G.add_edge(att2, att1)  # top-down
+
 
         # Compute layout positions (layered by intent size)
         pos = {}
@@ -164,10 +115,10 @@ class RandomGraph:
 
         # Group nodes by layer (based on length)
         for node in G.nodes:
-            layer = len(node)
+            layer = count_ones(node)
             layers.setdefault(layer, []).append(node)
 
-        # Assign positions
+        # Assigning positions
         for layer, nodes in layers.items():
             n = len(nodes)
             offset = -(n - 1)  # This centers the layer horizontally
@@ -175,10 +126,9 @@ class RandomGraph:
                 x = (i * 2) + offset  # Centering
                 y = -layer
                 pos[node] = (x, y)
-
-        # Build labels
+        # Building labels
         labels = {
-            node: f"I: {{{', '.join(sorted(node_map[node][0]))}}}\nE: {{{', '.join(sorted(node_map[node][1]))}}}"
+            node: f"I: {{{', '.join(sorted(self.bitset_to_attrset(node_map[node][1])))}}}\nE: {{{', '.join(sorted(self.bitset_to_objset(node_map[node][0])))}}}"
             for node in G.nodes
         }
 
