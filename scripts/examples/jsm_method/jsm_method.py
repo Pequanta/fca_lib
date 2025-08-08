@@ -18,7 +18,7 @@ class JSMMethodApplication:
         self.postive_hypotheses = []
         self.negative_hypotheses = []
         self.goal_attr = goal_attr
-        self.postive_context = pos_context
+        self.positive_context = pos_context
         self.negative_context = negative_context
         self.objects_ = objects_
         self.attributes_ = attributes_
@@ -35,10 +35,10 @@ class JSMMethodApplication:
                 a set containing all of possible hypotheses of the indicated type
         """
         candidate_hyp = []
-        for i in range(len(self.postive_context)):
+        for i in range(len(self.positive_context)):
             if type:
-                if self.check_valid_hypothesis(self.postive_context[i], type=True):
-                    candidate_hyp.append(self.postive_context[i])
+                if self.check_valid_hypothesis(self.positive_context[i], type=True):
+                    candidate_hyp.append(self.positive_context[i])
             else:
                 if self.check_valid_hypothesis(self.negative_context[i], type=True):
                     candidate_hyp.append(self.negative_context[i])
@@ -48,8 +48,8 @@ class JSMMethodApplication:
     def check_valid_hypothesis(self, hypothesis: int, type: bool) -> bool:
         is_valid = True
         if type == True:
-            for i in range(len(self.postive_context)):
-                if not bset_operations.__subset_of__(hypothesis, self.postive_context[i]):
+            for i in range(len(self.positive_context)):
+                if not bset_operations.__subset_of__(hypothesis, self.positive_context[i]):
                     is_valid = False
                     break
         elif type == False:
@@ -65,15 +65,15 @@ class JSMMethodApplication:
 
 
         #postive hypotheses test 
-        for undetermined_context in (self.undetermined_context):
-            for negative_context in self.negative_context:
-                if bset_operations.__subset_of__(undetermined_context, negative_context):
+        for context_u in undetermined_context:
+            for context_n in self.negative_context:
+                if bset_operations.__subset_of__(context_u, context_n):
                     has_negative = True
 
         #postive hypotheses test
-        for undetermined_context in (self.undetermined_context):
-            for negative_context in self.negative_context:
-                if bset_operations.__subset_of__(undetermined_context, negative_context):
+        for context_u in undetermined_context:
+            for context_p in self.positive_context:
+                if bset_operations.__subset_of__(context_u, context_p):
                     has_positive = True
 
             

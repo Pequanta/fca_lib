@@ -121,3 +121,6 @@ logs/
 
 # Docker
 *.pid
+
+#testing file
+scripts/examples/run_example.py
