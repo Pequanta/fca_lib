@@ -14,17 +14,9 @@ class BitSetOperations:
     def __subset_of__(self , obj_one_attrs: int, obj_two_attrs: int)-> bool:
         """
             checks if obj_one_attrs.set is a subset of obj_two_attrs.set
+            (i.e., all bits set in obj_one_attrs are also set in obj_two_attrs)
         """
-        flag_exist = True #This will hold if the relations in the first object's set also exist in the second object's attributs
-        bit_length = len(bin(obj_two_attrs)) - 2
-
-        for i in range(bit_length):
-            hold = 1 << i #This will hold which object-attribute relation to check with index of value hold
-
-            if (obj_one_attrs & obj_two_attrs) & hold != 0:
-                flag_exist = False
-                break
-        return (obj_one_attrs < obj_two_attrs) and flag_exist
+        return (obj_one_attrs & obj_two_attrs) == obj_one_attrs
     
     def __proper_subset_of__(self, obj_one_attrs: int, obj_two_attrs: int)-> bool:
         """
