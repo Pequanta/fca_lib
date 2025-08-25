@@ -68,15 +68,19 @@ class QuboFormulation:
         
         m = len(candidates)
         # linear terms: reward = gain
-        linear = np.array([c['gain'] for c in candidates], dtype=float)
+        linear = np.array([c['gini_gain'] for key, c in candidates.items()], dtype=float)
+
         # pairwise overlap penalty: J_ij = overlap size / n
         n = len(context)
         overlaps = np.zeros((m, m), dtype=float)
+        
+
+        candidate_data = list(candidates.keys())
         for i in range(m):
-            ext_i = set(candidates[i]['extent_idx'])
+            ext_i = candidate_data[i][0]
             for j in range(i+1, m):
-                ext_j = set(candidates[j]['extent_idx'])
-                ov = len(ext_i & ext_j) / n if n>0 else 0.0
+                ext_j = candidate_data[j][0]
+                ov = count_ones(ext_i & ext_j) / n if n>0 else 0.0
                 overlaps[i, j] = ov
                 overlaps[j, i] = ov
         Q = np.zeros((m, m), dtype=float)

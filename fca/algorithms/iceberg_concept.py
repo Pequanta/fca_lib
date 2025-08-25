@@ -21,27 +21,25 @@ class IcebergConcept:
 
     def get_iceberg_data(
             self,
-            concepts,
+            concept,
             goal_attr,
             num_objects,
             baseline_counts,
             class_counts = None
         ):
-        hash_val = hash(concepts)
         index = 0
         if class_counts is None:
             class_counts = {0: 0, 1: 0}
             while index < num_objects:
-                if (1 << index) & concepts[0] != 0:
-                    if (1 << index) & goal_attr != 0:
+                if (1 << index) & concept[0] != 0:
+                    if (1 << index) & goal_attr[index] != 0:
                         class_counts[1] += 1
                     else:
                         class_counts[0] += 1
-        result = {}
+                index += 1
 
-
-        result[hash_val] = {
-            "support": count_ones(concepts[0] / num_objects),
+        result = {
+            "support": (count_ones(concept[0]) / num_objects),
             "class_counts": class_counts,
             "gini_impurity":  gini_impurity_from_counts(class_counts),
             "gini_gain": gini_gain_over_baseline(class_counts, baseline_counts)

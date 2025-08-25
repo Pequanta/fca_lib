@@ -15,15 +15,14 @@ class Encoder:
                 The method will extract an object array, attribute array and a relation encoded with bitset representation 
                 from the passed pandas framework
         """
-        print(type(data))
         if type(data) != pd.DataFrame:
             print("Unsupported Type!")
             return None
 
 
-        attributes_ = np.asarray(data.columns[2:])
+        attributes_ = np.asarray(data.columns[1:])
 
-        objects_ = data[data.columns[1]].to_numpy()
+        objects_ = data[data.columns[0]].to_numpy()
         data = data[attributes_]
 
      

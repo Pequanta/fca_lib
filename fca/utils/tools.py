@@ -12,7 +12,7 @@ def count_ones(n: int) -> int:
 # Information gain
 
 def gini_impurity_from_counts(counts):
-    total = sum(counts)
+    total = sum(list(counts.values()))
     if total == 0:
         return 0
     probs = [count / total for count in counts]
