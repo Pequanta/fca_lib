@@ -2,7 +2,7 @@ from typing import Dict, List, Set, Tuple
 from numpy import binary_repr
 from collections import Counter
 from fca.utils.bitset import BitSetOperations
-from fca.utils.tools import count_ones
+from fca.utils.utils import count_ones
 from fca.concept_lattice import ConceptLattice
 from fca.algorithms.iceberg_concept import IcebergConcept
 from fca.qubo_formulation.qubo_formulations import QuboFormulation
@@ -23,6 +23,7 @@ class JSMMethodApplication:
             data_preprocessing: PreprocessingJSM
 
             ):
+        self.min_support = 0.2
         self.postive_hypotheses = []
         self.negative_hypotheses = []
         self.goal_attr = goal_attr
@@ -30,14 +31,13 @@ class JSMMethodApplication:
         self.attributes_ = attributes_
         self.data_processing = data_preprocessing
         self.positive_context, self.negative_context, self.uknown_context = data_preprocessing.process_data() 
-        
-        
+        self.n_rules = 10
+
+
         #positive concepts
         ext_int, int_ext, _, _ = self.data_processing.encode_data(1)
-        positive_lattice = ConceptLattice(ext_int, int_ext, self.objects_, self.attributes_)
-        self.concepts = positive_lattice.all_concepts()
-
-
+        positive_lattice = ConceptLattice(ext_int, int_ext, self.objects_[:len(self.positive_context)], self.attributes_, self.min_support)
+        self.positive_concepts = positive_lattice.all_concepts()
         self.baseline_counts = {}
 
 
@@ -74,7 +74,7 @@ class JSMMethodApplication:
 
         candidate_hyp = []
         ext_int, int_ext, _, _ = self.data_processing.encode_data(type)
-        lattice = ConceptLattice(ext_int, int_ext, self.objects_, self.attributes_)
+        lattice = ConceptLattice(ext_int, int_ext, self.objects_[:len(self.positive_context)], self.attributes_, self.min_support)
         concepts = lattice.all_concepts()
         for i in range(len(concepts)):
             if undetermined_context is not None and bset_operations.__subset_of__(undetermined_context, concepts[i][0]): # type: ignore
@@ -110,6 +110,7 @@ class JSMMethodApplication:
     def get_class_counts(self, undetermined_context):
         result = {0: 0, 1: 0}
 
+
         for i in range(len(self.positive_context)):
             if bset_operations.__subset_of__(undetermined_context, self.positive_context[i]):
                 result[self.goal_attr[i]] += 1
@@ -120,20 +121,25 @@ class JSMMethodApplication:
         
 
         # Getting iceberg data for positive concepts
-        candidates_data = iceberg_operations.get_iceberg_data(
-            self.concepts,
-            self.goal_attr,
-            len(self.objects_),
-            self.baseline_counts,
-        )
+        candidates_data = {
+            self.positive_concepts[i]: iceberg_operations.get_iceberg_data(
+                self.positive_concepts[i],
+                self.goal_attr,
+                len(self.objects_),
+                self.baseline_counts
+            )
+            for i in range(len(self.positive_concepts)) if self.positive_concepts[i][0] != 0
+        }
+
 
         return candidates_data
 
-    def get_qubo_data(self, candidates, context, alpha, beta, n_rules) -> List[Dict]:
+    def get_qubo_data(self, candidates, candidate_concepts, context, alpha, beta,n_rules) -> List[Dict]:
+
         Q_matrix, offset = qubo_formulation.build_qubo(candidates, context, alpha, beta, n_rules)
         sel_vec, energy = classical_solutions.solve_qubo_sim_anneal(Q_matrix, offset=offset, n_iters=2000, temp_start=1.0, temp_end=1e-3, seed=42)
-
-        selected_candidates = [candidates[i] for i in range(len(candidates)) if sel_vec[i] == 1]
+        selected_candidates = [candidate_concepts[i] for i in range(len(candidate_concepts)) if sel_vec[i] == 1]
+        print("matrix size: ", Q_matrix.shape)
         return selected_candidates
 
     def classify_(self, undetermined_context: int) -> Dict[int, float] | int | None:
@@ -145,35 +151,48 @@ class JSMMethodApplication:
         # Getting iceberg data for unknown concepts
 
         class_counts = self.get_class_counts(undetermined_context)
-        unknown_candidates_data = iceberg_operations.get_iceberg_data(
-            self.concepts,
-            self.goal_attr,
-            len(self.objects_),
-            self.baseline_counts,
-            class_counts
-        )
+
+        ext_int, int_ext, _, _ = self.data_processing.encode_data(0)
+        unknown_lattice = ConceptLattice(ext_int, int_ext, self.objects_[:len(self.positive_context)], self.attributes_, self.min_support)
+        unknown_concepts = unknown_lattice.all_concepts()
+        unknown_candidates_data = {
+            unknown_concepts[i]: iceberg_operations.get_iceberg_data(
+                unknown_concepts[i],
+                self.goal_attr,
+                len(self.objects_),
+                self.baseline_counts,
+                class_counts
+            )
+            for i in range(len(unknown_concepts)) if unknown_concepts[i][0] != 0 
+        }
 
         #mergin all candidates data
         candidates_data = {**candidates_data, **unknown_candidates_data}
-
+        candidate_concepts = list(candidates_data.keys())
+        print("Candidate size: ", len(candidate_concepts))
         # generating both the negative and positive hypotheses
         self.train()
 
-
+       
         #classification based on the data
         if len(candidates_data) == 0:
             return self.baseline_counts.most_common(1)[0][0] # type: ignore
-
         # Get QUBO data
-        qubo_data = self.get_qubo_data(candidates_data, self.positive_context, alpha=0.5, beta=1.0, n_rules=3)
+        qubo_data = self.get_qubo_data(candidates_data, candidate_concepts, self.positive_context, alpha=self.min_support, beta=1.0, n_rules=self.n_rules)
 
         if len(qubo_data) == 0:
             return self.baseline_counts.most_common(1)[0][0] # type: ignore
+        votes = Counter({0: 0, 1: 0})
 
-        votes = Counter()
-        for q in qubo_data:
-            for c in q['candidates']:
-                votes[c] += 1
+        candidate_intents = [candidate_concepts[i][1] for i in range(len(qubo_data)) if len(qubo_data) > 0 and qubo_data[i][1] > 0]
+        print("Candidate intents: ", candidate_intents, qubo_data)
+        for i in range(len(candidate_intents)):
+            if bset_operations.__subset_of__(candidate_intents[i], undetermined_context):#type: ignore
+                votes[1] += 1
+            else:
+                votes[0] += 1
+                
+        return votes.most_common(1)[0][0] if len(votes) > 0 else self.baseline_counts.most_common(1)[0][0] # type: ignore
 
     def get_accuracy(self, predictions: int, testing_target: int, data_size: int):
         """

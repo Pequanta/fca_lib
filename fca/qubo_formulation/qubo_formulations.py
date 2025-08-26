@@ -1,6 +1,6 @@
 import numpy as np
 import networkx as nx
-from utils.tools import count_ones
+from fca.utils.utils import count_ones
 
 class QuboFormulation:
     """

@@ -1,7 +1,7 @@
 from algorithms.next_closure import NextClosure
 import networkx as nx
 from typing import List, Tuple
-from utils.tools import count_ones, gini_gain_over_baseline, gini_impurity_from_counts
+from fca.utils.utils import count_ones, gini_gain_over_baseline, gini_impurity_from_counts
 class IcebergConcept:
     """
     A class to represent an iceberg concept in a formal context.
