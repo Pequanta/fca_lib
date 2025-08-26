@@ -6,7 +6,7 @@ from algorithms.next_closure import NextClosure
 set_operations = BitSetOperations()
 
 class ConceptLattice:
-    def __init__(self,extent_intent, intent_extent, objects_, attributes_):
+    def __init__(self,extent_intent, intent_extent, objects_, attributes_, min_support=None):
         """
             Args:
                 extent_intent: a list where the index indicates the index of an object
@@ -31,15 +31,19 @@ class ConceptLattice:
         self.attribute_bit_columns = intent_extent
         self.object_bit_rows = extent_intent
 
+        self.min_support = min_support
 
 
-    def all_concepts(self) -> List[Tuple[Set[str], Set[str]]]:
+
+    def all_concepts(self) -> List[Tuple]:
         """
         Computes all concepts in the formal context.
         Returns:
             List of tuples where each tuple contains a set of objects and a set of attributes.
         """
-
-        next_closure = NextClosure(self.num_objects, self.num_attributes, self.object_bit_rows, self.attribute_bit_columns)
-        return next_closure.all_concepts()
-        
+        if self.min_support:
+            next_closure = NextClosure(self.num_objects, self.num_attributes, self.object_bit_rows, self.attribute_bit_columns, self.min_support)
+            return next_closure.all_pruned_concepts()
+        else:
+            next_closure = NextClosure(self.num_objects, self.num_attributes, self.object_bit_rows, self.attribute_bit_columns)
+            return next_closure.all_concepts()

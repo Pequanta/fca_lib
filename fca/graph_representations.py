@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt 
-from utils.tools import count_ones
+from fca.utils.utils import count_ones
 
 matplotlib.use("TkAgg")
 class BipartiteGraph:
@@ -128,7 +128,7 @@ class RandomGraph:
                 pos[node] = (x, y)
         # Building labels
         labels = {
-            node: f"I: {{{', '.join(sorted(self.bitset_to_attrset(node_map[node][1])))}}}\nE: {{{', '.join(sorted(self.bitset_to_objset(node_map[node][0])))}}}"
+            node: f"I: {{{', '.join(sorted(self.bitset_to_attrset(node_map[node][1])))}}}\nE: {{{', '.join(list(map(lambda x: str(x), sorted(self.bitset_to_objset(node_map[node][0])))))}}}"
             for node in G.nodes
         }
 
