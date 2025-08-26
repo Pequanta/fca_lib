@@ -1,6 +1,6 @@
 import numpy as np
 import networkx as nx
-from utils.tools import count_ones
+from fca.utils.utils import count_ones
 
 class QuboFormulation:
     """
@@ -10,8 +10,7 @@ class QuboFormulation:
     def __init__(self):
         pass
 
-    @staticmethod
-    def build_iceberg_qubo(concepts, min_support, alpha=1.0, lambda_overlap=1.0, lambda_hierarchy=2.0, lattice_graph=None):
+    def build_iceberg_qubo(self, concepts, min_support, alpha=1.0, lambda_overlap=1.0, lambda_hierarchy=2.0, lattice_graph=None):
         """
         Build a structured QUBO matrix for Iceberg concept selection from a concept lattice.
         
@@ -30,7 +29,7 @@ class QuboFormulation:
         Q = np.zeros((n, n))
         
 
-        # 1. Support-based diagonal values
+        # Support-based diagonal values
         for i in range(n):
             support = count_ones(concepts[i][0]) 
             # Reward or penalty based on support                    
@@ -39,7 +38,7 @@ class QuboFormulation:
             else:
                 Q[i][i] += -alpha * support              # reward
 
-        # 2. Overlap penalty (off-diagonal)
+        # Overlap penalty (off-diagonal)
         for i in range(n):
             for j in range(i + 1, n):
                 overlap = count_ones(concepts[i][0] & concepts[j][0])
@@ -47,7 +46,7 @@ class QuboFormulation:
                     Q[i][j] += lambda_overlap * overlap
                     Q[j][i] += lambda_overlap * overlap
 
-        # 3. Parent-child constraint (x_child <= x_parent → penalty for child without parent)
+        # Parent-child constraint (x_child <= x_parent → penalty for child without parent)
         if lattice_graph is not None:
             for parent, child in lattice_graph.edges():
                 i = list(concepts).index(parent)
@@ -59,3 +58,45 @@ class QuboFormulation:
                 Q[j][i] += -2 * lambda_hierarchy
 
         return Q
+
+    def build_qubo(self, candidates, context, alpha=0.5, beta=1.0, k_target=None):
+        """
+        candidates: list with keys 'gain' and 'extent_idx'
+        context: list of rows (for computing overlap)
+        returns Q (numpy 2D array), linear bias h, constant offset
+        """
+        
+        m = len(candidates)
+        # linear terms: reward = gain
+        linear = np.array([c['gini_gain'] for key, c in candidates.items()], dtype=float)
+
+        # pairwise overlap penalty: J_ij = overlap size / n
+        n = len(context)
+        overlaps = np.zeros((m, m), dtype=float)
+        
+
+        candidate_data = list(candidates.keys())
+        for i in range(m):
+            ext_i = candidate_data[i][0]
+            for j in range(i+1, m):
+                ext_j = candidate_data[j][0]
+                ov = count_ones(ext_i & ext_j) / n if n>0 else 0.0
+                overlaps[i, j] = ov
+                overlaps[j, i] = ov
+        Q = np.zeros((m, m), dtype=float)
+        # Linear contribution (diagonal)
+        for i in range(m):
+            Q[i, i] += -linear[i] + beta * (1.0)  # -gain + beta*1 from x_i^2 term
+        # Off-diagonals from overlap penalty and quadratic penalty
+        for i in range(m):
+            for j in range(i+1, m):
+                Q[i, j] += alpha * overlaps[i, j] + beta * 1.0 
+                Q[j, i] = Q[i, j]
+        # Also linear has -2*beta*k term from expansion (we add to diagonal as linear bias)
+        offset = 0.0
+        if k_target is not None:
+            for i in range(m):
+                Q[i, i] += -2.0 * beta * k_target 
+            offset += beta * (k_target ** 2)
+        return Q, offset
+

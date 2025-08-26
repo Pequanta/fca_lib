@@ -1,7 +1,7 @@
 from algorithms.next_closure import NextClosure
 import networkx as nx
 from typing import List, Tuple
-from utils.tools import count_ones
+from fca.utils.utils import count_ones, gini_gain_over_baseline, gini_impurity_from_counts
 class IcebergConcept:
     """
     A class to represent an iceberg concept in a formal context.
@@ -18,21 +18,35 @@ class IcebergConcept:
             threshold (float): Support threshold for the iceberg concept.
         """
         pass
-    
-    def extract_iceberg_concepts(self, concepts: List[Tuple[int]], min_support: int):
-        """
-        Filters concepts from a concept lattice graph based on the iceberg condition.
 
-        Parameters:
-            concept_lattice (nx.DiGraph): A concept lattice with 'extent' attribute per node.
-            min_support (int): Minimum number of objects required in extent.
+    def get_iceberg_data(
+            self,
+            concept,
+            goal_attr,
+            num_objects,
+            baseline_counts,
+            class_counts = None
+        ):
+        index = 0
+        if class_counts is None:
+            class_counts = {0: 0, 1: 0}
+            while index < num_objects:
+                if (1 << index) & concept[0] != 0:
+                    if (1 << index) & goal_attr[index] != 0:
+                        class_counts[1] += 1
+                    else:
+                        class_counts[0] += 1
+                index += 1
 
-        Returns:
-            List of tuples: [(node_id, extent, intent), ...] satisfying the min_support condition.
-        """
-        iceberg_concepts = []
-        for node in concepts:
-            if count_ones(node[0]) >= min_support:
-                iceberg_concepts.append(node)
-        return iceberg_concepts
-            
+        result = {
+            "support": (count_ones(concept[0]) / num_objects),
+            "class_counts": class_counts,
+            "gini_impurity":  gini_impurity_from_counts(class_counts),
+            "gini_gain": gini_gain_over_baseline(class_counts, baseline_counts)
+        }
+
+        return result
+
+        
+
+
