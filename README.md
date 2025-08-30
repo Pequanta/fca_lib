@@ -61,15 +61,14 @@ Clone the repository and install dependencies (requires Python 3.10+):
 ```bash
 git clone https://github.com/Pequanta/fca_lib.git
 cd fca_lib
-pip install -r requirements.txt
 ```
 
 ### Running Examples
 
-Run the included example:
+Run the included example and install dependencies:
 
 ```bash
-python scripts/examples/run_example.py
+bash scripts/run_example.sh
 ```
 ------
 
@@ -83,3 +82,4 @@ python scripts/examples/run_example.py
 ## 📜 License
 
 This project is under [MIT License](LICENSE).
+
