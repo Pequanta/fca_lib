@@ -23,15 +23,15 @@ class JSMMethodApplication:
             data_preprocessing: PreprocessingJSM
 
             ):
-        self.min_support = 0.2
-        self.postive_hypotheses = []
+        self.min_support = 0.1
+        self.positive_hypotheses = []
         self.negative_hypotheses = []
         self.goal_attr = goal_attr
         self.objects_ = objects_
         self.attributes_ = attributes_
         self.data_processing = data_preprocessing
         self.positive_context, self.negative_context, self.uknown_context = data_preprocessing.process_data() 
-        self.n_rules = 10
+        self.n_rules = 100
 
 
         #positive concepts
@@ -56,7 +56,7 @@ class JSMMethodApplication:
         """
             The method will handle generation of hypotheses from the positive and negative contexts.
         """
-        self.postive_hypotheses = self.get_hypotheses(type=True)
+        self.positive_hypotheses = self.get_hypotheses(type=True)
         self.negative_hypotheses = self.get_hypotheses(type=False)
 
     def get_hypotheses(self, type: int, undetermined_context = None) -> List[int]:
@@ -115,7 +115,6 @@ class JSMMethodApplication:
             if bset_operations.__subset_of__(undetermined_context, self.positive_context[i]):
                 result[self.goal_attr[i]] += 1
         return result
-    
 
     def get_candidates(self):
         
@@ -142,43 +141,24 @@ class JSMMethodApplication:
         print("matrix size: ", Q_matrix.shape)
         return selected_candidates
 
-    def classify_(self, undetermined_context: int) -> Dict[int, float] | int | None:
-
-
+    def classify_(self, undetermined_context: int, index: int) -> Dict[int, float] | int | None:
+        print("Classifying undetermined context: ", undetermined_context)
+        print("Index: ", index)
         #baseline candidates
         candidates_data = self.get_candidates()
 
-        # Getting iceberg data for unknown concepts
-
-        class_counts = self.get_class_counts(undetermined_context)
-
-        ext_int, int_ext, _, _ = self.data_processing.encode_data(0)
-        unknown_lattice = ConceptLattice(ext_int, int_ext, self.objects_[:len(self.positive_context)], self.attributes_, self.min_support)
-        unknown_concepts = unknown_lattice.all_concepts()
-        unknown_candidates_data = {
-            unknown_concepts[i]: iceberg_operations.get_iceberg_data(
-                unknown_concepts[i],
-                self.goal_attr,
-                len(self.objects_),
-                self.baseline_counts,
-                class_counts
-            )
-            for i in range(len(unknown_concepts)) if unknown_concepts[i][0] != 0 
-        }
-
-        #mergin all candidates data
-        candidates_data = {**candidates_data, **unknown_candidates_data}
         candidate_concepts = list(candidates_data.keys())
         print("Candidate size: ", len(candidate_concepts))
         # generating both the negative and positive hypotheses
         self.train()
 
        
+
         #classification based on the data
         if len(candidates_data) == 0:
             return self.baseline_counts.most_common(1)[0][0] # type: ignore
         # Get QUBO data
-        qubo_data = self.get_qubo_data(candidates_data, candidate_concepts, self.positive_context, alpha=self.min_support, beta=1.0, n_rules=self.n_rules)
+        qubo_data = self.get_qubo_data(candidates_data, candidate_concepts, self.positive_hypotheses, alpha=self.min_support, beta=1.0, n_rules=self.n_rules)
 
         if len(qubo_data) == 0:
             return self.baseline_counts.most_common(1)[0][0] # type: ignore

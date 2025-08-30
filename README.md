@@ -1,168 +1,85 @@
-# fca_lib
+# FCA\_LIB
 
-A Python library for Formal Concept Analysis (FCA), offering command‑line tools, core functionalities, and examples to get you started.
-
-## 📦 Table of Contents
-
-- [Installation](#installation)  
-- [Requirements](#requirements)  
-- [Usage](#usage)  
-  - [Library Usage](#library-usage)  
-  - [Command-line Interface (CLI)](#command-line-interface-cli)  
-  - [Examples](#examples)  
-- [Structure](#structure)  
-- [Testing](#testing)  
-- [Contributing](#contributing)  
-- [License](#license)
+A research-oriented Python library for **Formal Concept Analysis (FCA)** with extensions for **classification, hypothesis generation, and optimization**. The project combines classical FCA methods with experimental approaches such as the **John Stuart Mill (JSM) method**, **Titanic iceberg pruning**, and **QUBO-based optimization** (for both classical solvers and quantum-inspired workflows).
 
 ---
 
-## Installation
+## 📂 Project Structure
 
-Install via `pip`:
+* **`fca/`** – Core FCA implementations
 
-```bash
-pip install .
-```
+  * `algorithms/` – Concept generation algorithms (Next Closure, Iceberg concepts).
+  * `utils/` – Supporting utilities (bitset operations, tools, models, fuzzy logic).
+  * `encoders.py` – Context encoding utilities.
+  * `concept_lattice.py` – Lattice construction and concept handling.
+  * `graph_representations.py` – Graph-based representations of lattices.
+  * `qubo_formulation/` – QUBO construction and classical solver integration.
 
-Or directly from source:
+* **`scripts/examples/`** – Example workflows and experiments
+
+  * `jsm_method/` – JSM application (data preprocessing, hypothesis generation, classification).
+  * `other_examples/` – Lazy FCA classification, Titanic algorithm, checks.
+  * `run_example.py` – Entry point for running example workflows.
+
+* **`docs/`** – Documentation and supporting material.
+
+---
+
+## ⚙️ Features
+
+* **Formal Concept Analysis (FCA)**
+
+  * Next Closure algorithm for generating concepts.
+  * Iceberg pruning (Titanic method) to manage concept explosion.
+  * Graph and lattice representations of contexts.
+
+* **JSM Method (Hypothesis-Based Classification)**
+
+  * Hypothesis generation from positive and negative contexts.
+  * Classification of undetermined examples using FCA-derived rules.
+  * Handling of contradictory and insufficient data cases.
+
+* **Optimization via QUBO**
+
+  * QUBO formulation for rule selection and candidate pruning.
+  * Simulated annealing as a baseline solver.
+  * Integration prepared for quantum solvers.
+
+* **Data Handling**
+
+  * Bitset-based context encoding.
+  * Preprocessing utilities for structured data.
+
+---
+
+## 🚀 Usage
+
+### Installation
+
+Clone the repository and install dependencies (requires Python 3.10+):
 
 ```bash
 git clone https://github.com/Pequanta/fca_lib.git
 cd fca_lib
-pip install .
 ```
 
----
+### Running Examples
 
-## Requirements
-
-This project is compatible with Python 3.7+ and relies on the following dependencies:
-
-Dependencies are listed in `requirements.txt`:
+Run the included example:
 
 ```bash
-pip install -r requirements.txt
+bash scripts/run_example.sh
 ```
+------
 
-To use a Python virtual environment (recommended):
+## 🔮 Roadmap
 
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-pip install -r requirements.txt
-```
-
-Or with Poetry:
-
-```bash
-poetry install
-```
+* Extend QUBO integration to quantum solvers.
+* Improve Titanic iceberg pruning for large-scale datasets.
 
 ---
 
-## Usage
+## 📜 License
 
-### Library Usage
+This project is under [MIT License](LICENSE).
 
-```python
-from fca import Context, ConceptLattice
-
-# Load or construct a formal context
-ctx = Context.from_csv('data/context.csv')
-
-# Build and analyze the concept lattice
-lattice = ConceptLattice(ctx)
-for concept in lattice.concepts:
-    print(concept)
-```
-
-*Adjust according to actual API in `fca/`.*
-
----
-
-### Command-line Interface (CLI)
-
-The CLI scripts are in the `cli/` folder. You can run them directly:
-
-```bash
-python -m fca_lib.cli.command_name --help
-```
-
-Or if installed as an entry-point:
-
-```bash
-fca-lib [command] [options]
-```
-
-Available commands include:
-
-- `generate-lattice` – Generate concept lattices from context files  
-- `export-diagram` – Export lattice visualizations  
-
-*(Customize based on real CLI scripts.)*
-
----
-
-### Examples
-
-The `examples/` directory provides sample scripts:
-
-```bash
-python examples/example_build_lattice.py
-```
-
-These demonstrate:
-
-- Building lattices from data  
-- Exporting DOT/graph outputs  
-- Annotating concepts with attributes
-
----
-
-## Structure
-
-```
-fca_lib/
-├── cli/         # Command-line interface scripts
-├── docs/        # Documentation files
-├── examples/    # Example usage scripts
-├── fca/         # Core FCA modules (contexts, lattices, algorithms)
-├── scripts/     # Utility or helper scripts
-├── tests/       # Unit tests
-├── pyproject.toml
-├── requirements.txt
-└── README.md
-```
-
----
-
-## Testing
-
-Run the test suite with:
-
-```bash
-pytest
-```
-
-Ensure that all tests in `tests/` pass before committing.
-
----
-
-## Contributing
-
-1. Fork the repo  
-2. Create a new branch: `git checkout -b feature/my-feature`  
-3. Make your changes and add tests  
-4. Run tests and ensure formatting:  
-   ```bash
-   pytest
-   black .
-   ```
-5. Submit a pull request
-
----
-
-## License
-
-This project is licensed under the **GNU General Public License v2.0**. See the [LICENSE](LICENSE) file for details.

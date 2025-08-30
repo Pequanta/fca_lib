@@ -196,8 +196,8 @@ def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, pre
 
     result = []
     
-    result = [jsm_method.classify_(unknown_context[i]) for i in range(len(X_test))]
-
+    result = [jsm_method.classify_(unknown_context[i], i) for i in range(len(unknown_context))]
+    print("Result: ", result)
     acc_jsm = accuracy_score(list(y_test), result)
     return {"jsm": acc_jsm, "decision_tree": acc_dt}
 
