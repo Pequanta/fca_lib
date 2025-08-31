@@ -34,7 +34,6 @@ def generate_concept_lattice(df):
     ext_int, int_ext, obj, attr = encoder.pandas_encoder(df) #type: ignore
     concept_lattice = ConceptLattice(ext_int, int_ext, obj, attr)
     concepts = concept_lattice.all_concepts()
-    # print(len(concepts))
     graph_ = RandomGraph(concepts, list(attr), list(obj))
     g_ , p_ , l_ = graph_.build_lattice_graph()
     graph_.plot_graph()
@@ -103,7 +102,6 @@ def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, pre
 
     # Split dataset
     df['diagnosis'] = fuzzy_.class_col.astype(bool)
-    print(df.head())
     train_df, test_df = train_test_split(df, test_size=test_size, random_state=random_state, stratify=df['diagnosis'])
     train_df = train_df.reset_index(drop=True)
     test_df = test_df.reset_index(drop=True)
@@ -123,16 +121,15 @@ def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, pre
     acc_jsm_classical = accuracy_score(y_test, y_pred_jsm_classical)
 
 
-    # #classification with JSM with dirac-3
-    # y_pred_jsm_dirac = jsm_classifier(X_train, y_train, X_test, jsm_model_class=jsm_model_class, preprocessing_class=preprocessing_class, simulation_type="quantum")
-    # acc_jsm_dirac = accuracy_score(y_test, y_pred_jsm_dirac)
-    acc_jsm_dirac = 0.3
-
+    #classification with JSM with dirac-3
+    y_pred_jsm_dirac = jsm_classifier(X_train, y_train, X_test, jsm_model_class=jsm_model_class, preprocessing_class=preprocessing_class, simulation_type="quantum")
+    acc_jsm_dirac = accuracy_score(y_test, y_pred_jsm_dirac)
+    
     return {"decision_tree": f"{acc_dt:.3f}", "jsm_classical": f"{acc_jsm_classical:.3f}", "jsm_dirac": f"{acc_jsm_dirac:.3f}"}
 
 
 
 
 if __name__ == "__main__":
-    #print(benchmark_jsm_vs_classical(df_temp, [col for col in df_temp.columns if col != 'diagnosis'], 'diagnosis', JSMMethodApplication, PreprocessingJSM)) # type: ignore
-    generate_concept_lattice(df_small)
+    print(benchmark_jsm_vs_classical(df_temp, [col for col in df_temp.columns if col != 'diagnosis'], 'diagnosis', JSMMethodApplication, PreprocessingJSM)) # type: ignore
+    #generate_concept_lattice(df_small)
