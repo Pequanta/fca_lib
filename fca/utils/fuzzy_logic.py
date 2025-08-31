@@ -58,7 +58,7 @@ class FuzzyLogic:
         """
         self.fuzzy_to_binary()
 
-        object_attribute_encoded, attribute_object_encoded, objects_, attributes_ = encoder.pandas_encoder(self.data)
+        object_attribute_encoded, attribute_object_encoded, objects_, attributes_ = encoder.pandas_encoder(self.data) #type: ignore
 
         return (object_attribute_encoded, attribute_object_encoded, objects_, attributes_)
     

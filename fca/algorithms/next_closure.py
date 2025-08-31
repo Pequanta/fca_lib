@@ -92,7 +92,6 @@ class NextClosure:
         concepts = []
         seen = set()
         current = 0
-
         while current is not None:
             closed = self._intent_closure_bitset(current)
             if closed not in seen:
@@ -106,6 +105,5 @@ class NextClosure:
                     concepts.append((extent_bits, closed))
 
             current = self._next_closure_bitset(current)
-
         return concepts
 
