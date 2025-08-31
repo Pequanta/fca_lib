@@ -8,33 +8,30 @@ from fca.algorithms.iceberg_concept import IcebergConcept
 from fca.qubo_formulation.qubo_formulations import QuboFormulation
 from fca.qubo_formulation.classical_solutions import ClassicalSolutions
 from scripts.examples.jsm_method.data_preprocessing import PreprocessingJSM
-from fca.qubo_formulation.dirac_solution import DiracSolution
+
 
 bset_operations = BitSetOperations()
 iceberg_operations = IcebergConcept()
 qubo_formulation = QuboFormulation()
-
+classical_solutions = ClassicalSolutions()
 class JSMMethodApplication:
     def __init__(
             self,
             goal_attr: List, 
             objects_: List,
             attributes_: List,
-            data_preprocessing: PreprocessingJSM,
-            solution_type: str
+            data_preprocessing: PreprocessingJSM
+
             ):
-        self.min_support = 0.176
+        self.min_support = 0.1
         self.positive_hypotheses = []
         self.negative_hypotheses = []
         self.goal_attr = goal_attr
         self.objects_ = objects_
         self.attributes_ = attributes_
         self.data_processing = data_preprocessing
-        self.positive_context, self.negative_context = data_preprocessing.process_data() 
-        self.n_rules = 30
-
-        self.candidates_data = None
-        self.qubo_data = None
+        self.positive_context, self.negative_context, self.uknown_context = data_preprocessing.process_data() 
+        self.n_rules = 100
 
 
         #positive concepts
@@ -42,8 +39,6 @@ class JSMMethodApplication:
         positive_lattice = ConceptLattice(ext_int, int_ext, self.objects_[:len(self.positive_context)], self.attributes_, self.min_support)
         self.positive_concepts = positive_lattice.all_concepts()
         self.baseline_counts = {}
-
-        self.solution_type = solution_type
 
 
         #calculating the baseline counts, i.e,  the number of occurrences of each class for all training examples
@@ -63,14 +58,6 @@ class JSMMethodApplication:
         """
         self.positive_hypotheses = self.get_hypotheses(type=True)
         self.negative_hypotheses = self.get_hypotheses(type=False)
-        self.candidates_data = self.get_candidates()
-        self.candidate_concepts = list(self.candidates_data.keys())
-        self.qubo_data = self.get_qubo_data(self.candidates_data, self.candidate_concepts, self.positive_hypotheses, alpha=self.min_support, beta=1.0, n_rules=self.n_rules, solution_type=self.solution_type)
-
-        print("Candidate size: ", len(self.candidate_concepts))
-
-        
-       
 
     def get_hypotheses(self, type: int, undetermined_context = None) -> List[int]:
         """
@@ -94,9 +81,9 @@ class JSMMethodApplication:
                 if self.check_valid_hypothesis(undetermined_context, type=1):
                     candidate_hyp.append(concepts[i][1])
             else:
-                if type == True and self.check_valid_hypothesis(concepts[i][1], type=1): # type: ignore
+                if type == 1 and self.check_valid_hypothesis(concepts[i][1], type=1): # type: ignore
                     candidate_hyp.append(concepts[i][1])
-                elif type == False and self.check_valid_hypothesis(concepts[i][1], type=-1): # type: ignore
+                elif type == -1 and self.check_valid_hypothesis(concepts[i][1], type=-1): # type: ignore
                     candidate_hyp.append(concepts[i][1])
 
         return candidate_hyp
@@ -146,45 +133,45 @@ class JSMMethodApplication:
 
         return candidates_data
 
-    def get_qubo_data(self, candidates, candidate_concepts, context, alpha, beta,n_rules, solution_type = "classical") -> List[Dict] | None:
+    def get_qubo_data(self, candidates, candidate_concepts, context, alpha, beta,n_rules) -> List[Dict]:
 
         Q_matrix, offset = qubo_formulation.build_qubo(candidates, context, alpha, beta, n_rules)
-        if solution_type == "classical":
-            solution_ = ClassicalSolutions(Q_matrix)
-            sel_vec, energy = solution_.solve(offset=offset, n_iters=2000, temp_start=1.0, temp_end=1e-3, seed=42)
-        elif solution_type == "quantum":
-            solution_ = DiracSolution(Q_matrix)
-            sel_vec, energy = solution_.solve() #type: ignore
-        else:
-            print("Solution type not specified")
-            return None
+        sel_vec, energy = classical_solutions.solve_qubo_sim_anneal(Q_matrix, offset=offset, n_iters=2000, temp_start=1.0, temp_end=1e-3, seed=42)
         selected_candidates = [candidate_concepts[i] for i in range(len(candidate_concepts)) if sel_vec[i] == 1]
         print("matrix size: ", Q_matrix.shape)
-        print("Qubo Data")
-        print(*Q_matrix[:10], sep="\n")
         return selected_candidates
 
     def classify_(self, undetermined_context: int, index: int) -> Dict[int, float] | int | None:
+        print("Classifying undetermined context: ", undetermined_context)
         print("Index: ", index)
         #baseline candidates
-        
+        candidates_data = self.get_candidates()
+
+        candidate_concepts = list(candidates_data.keys())
+        print("Candidate size: ", len(candidate_concepts))
+        # generating both the negative and positive hypotheses
+        self.train()
+
+       
 
         #classification based on the data
-        if len(self.candidates_data) == 0: #type: ignore
+        if len(candidates_data) == 0:
             return self.baseline_counts.most_common(1)[0][0] # type: ignore
         # Get QUBO data
-       
-        if len(self.qubo_data) == 0:#type: ignore
+        qubo_data = self.get_qubo_data(candidates_data, candidate_concepts, self.positive_hypotheses, alpha=self.min_support, beta=1.0, n_rules=self.n_rules)
+
+        if len(qubo_data) == 0:
             return self.baseline_counts.most_common(1)[0][0] # type: ignore
         votes = Counter({0: 0, 1: 0})
 
-        candidate_intents = [self.candidate_concepts[i][1] for i in range(len(self.qubo_data)) if len(self.qubo_data) > 0 and self.qubo_data[i][1] > 0] #type: ignore
+        candidate_intents = [candidate_concepts[i][1] for i in range(len(qubo_data)) if len(qubo_data) > 0 and qubo_data[i][1] > 0]
+        print("Candidate intents: ", candidate_intents, qubo_data)
         for i in range(len(candidate_intents)):
             if bset_operations.__subset_of__(candidate_intents[i], undetermined_context):#type: ignore
                 votes[1] += 1
             else:
                 votes[0] += 1
-
+                
         return votes.most_common(1)[0][0] if len(votes) > 0 else self.baseline_counts.most_common(1)[0][0] # type: ignore
 
     def get_accuracy(self, predictions: int, testing_target: int, data_size: int):
