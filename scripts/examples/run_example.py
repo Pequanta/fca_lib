@@ -31,11 +31,20 @@ encoder = Encoder()
 df_small = pd.read_csv("fca/assets/test_df.csv")
 
 def generate_concept_lattice(df):
+    """
+    Generates and plots the concept lattice for a given DataFrame.
+
+    Args:
+        df (pd.DataFrame): Input dataset.
+
+    Returns:
+        None
+    """
     ext_int, int_ext, obj, attr = encoder.pandas_encoder(df) #type: ignore
     concept_lattice = ConceptLattice(ext_int, int_ext, obj, attr)
     concepts = concept_lattice.all_concepts()
     graph_ = RandomGraph(concepts, list(attr), list(obj))
-    g_ , p_ , l_ = graph_.build_lattice_graph()
+    graph_.build_lattice_graph()
     graph_.plot_graph()
 
 
@@ -57,12 +66,37 @@ fuzzy_.data['diagnosis'] = fuzzy_.class_col
 
 
 def decision_tree_classifier(X_train, y_train, X_test):
+    """
+    Trains a Decision Tree classifier and predicts labels for the test set.
+
+    Args:
+        X_train (pd.DataFrame): Training features.
+        y_train (pd.Series): Training labels.
+        X_test (pd.DataFrame): Test features.
+
+    Returns:
+        np.ndarray: Predicted labels for the test set.
+    """
     dt = DecisionTreeClassifier(random_state=42)
     dt.fit(X_train, y_train)
     return dt.predict(X_test)
 
 
 def jsm_classifier(X_train, y_train, X_test, preprocessing_class, jsm_model_class, simulation_type="classical"):
+    """
+    Trains a JSM-based classifier and predicts labels for the test set.
+
+    Args:
+        X_train (pd.DataFrame): Training features.
+        y_train (pd.Series): Training labels.
+        X_test (pd.DataFrame): Test features.
+        preprocessing_class (class): Preprocessing class for JSM.
+        jsm_model_class (class): JSM classifier class.
+        simulation_type (str, optional): Solution type ("classical" or "quantum"). Defaults to "classical".
+
+    Returns:
+        list[bool]: List of predicted labels for the test set.
+    """
     goal_train = y_train.to_list()
 
     data_= preprocessing_class(X_train, goal_train)
@@ -87,17 +121,18 @@ def jsm_classifier(X_train, y_train, X_test, preprocessing_class, jsm_model_clas
 def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, preprocessing_class, test_size=0.3, random_state=42):
     """
     Benchmark JSM-based classification against a Decision Tree classifier.
-    
+
     Args:
         df (pd.DataFrame): Dataset with features and class column.
         numeric_cols (list): List of numeric feature names.
         class_col (str): Target column name.
-        jsm_model_class: Your JSMMethodApplication class (already initialized with preprocessing).
-        test_size (float): Fraction of data to use as test set.
-        random_state (int): Seed for reproducibility.
+        jsm_model_class (class): JSM classifier class.
+        preprocessing_class (class): Preprocessing class for JSM.
+        test_size (float, optional): Fraction of data to use as test set. Defaults to 0.3.
+        random_state (int, optional): Seed for reproducibility. Defaults to 42.
 
     Returns:
-        dict: Accuracy scores {"jsm": float, "decision_tree": float}
+        dict: Accuracy scores {"decision_tree": str, "jsm_classical": str, "jsm_dirac": str}
     """
 
     # Split dataset

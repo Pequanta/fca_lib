@@ -18,7 +18,6 @@ A research-oriented Python library for **Formal Concept Analysis (FCA)** with ex
 * **`scripts/examples/`** – Example workflows and experiments
 
   * `jsm_method/` – JSM application (data preprocessing, hypothesis generation, classification).
-  * `other_examples/` – Lazy FCA classification, Titanic algorithm, checks.
   * `run_example.py` – Entry point for running example workflows.
 
 * **`docs/`** – Documentation and supporting material.

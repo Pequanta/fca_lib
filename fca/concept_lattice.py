@@ -37,9 +37,11 @@ class ConceptLattice:
 
     def all_concepts(self) -> List[Tuple]:
         """
-        Computes all concepts in the formal context.
-        Returns:
-            List of tuples where each tuple contains a set of objects and a set of attributes.
+            Computes all concepts in the formal context.
+            Args:
+                None
+            Returns:
+                List of tuples where each tuple contains a set of objects and a set of attributes.
         """
         if self.min_support:
             next_closure = NextClosure(self.num_objects, self.num_attributes, self.object_bit_rows, self.attribute_bit_columns, self.min_support)

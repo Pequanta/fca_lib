@@ -59,7 +59,7 @@ class JSMMethodApplication:
 
     def train(self):
         """
-            The method will handle generation of hypotheses from the positive and negative contexts.
+            Generates hypotheses and candidates, and solves the QUBO problem to select candidate concepts.
         """
         self.positive_hypotheses = self.get_hypotheses(type=True)
         self.negative_hypotheses = self.get_hypotheses(type=False)
@@ -81,6 +81,7 @@ class JSMMethodApplication:
 
             Args:
                 type(bool): a boolean value indicating whether to return positive or negative hypotheses
+                undetermined_context: list of contexts from the test data
             Returns:
                 a set containing all of possible hypotheses of the indicated type
         """
@@ -103,6 +104,16 @@ class JSMMethodApplication:
     
 
     def check_valid_hypothesis(self, hypothesis: int, type: int) -> bool:
+        """
+            Checks if a hypothesis is valid by ensuring it is not a subset of the opposite context.
+
+            Args:
+                hypothesis (int): Bitset representation of the hypothesis.
+                type (int): 1 for positive, -1 for negative.
+
+            Returns:
+                bool: True if valid, False otherwise.
+        """
         is_valid = True
         length = len(self.negative_context) if type==1 else len(self.positive_context)
         for i in range(length):
@@ -121,16 +132,31 @@ class JSMMethodApplication:
         return is_valid
 
     def get_class_counts(self, undetermined_context):
+        """
+            Counts the occurrences of each class label in the positive context that match the undetermined context.
+
+            Args:
+                undetermined_context (int): Bitset representation of the test instance's attributes.
+
+            Returns:
+                Dict[int, int]: Dictionary with counts for each class label.
+        """
         result = {0: 0, 1: 0}
-
-
         for i in range(len(self.positive_context)):
             if bset_operations.__subset_of__(undetermined_context, self.positive_context[i]):
                 result[self.goal_attr[i]] += 1
         return result
 
     def get_candidates(self):
-        
+        """
+            Generates candidate concepts and their iceberg data from positive concepts.
+
+            Args:
+                None
+
+            Returns:
+                Dict: Dictionary mapping concepts to their iceberg data.
+        """
 
         # Getting iceberg data for positive concepts
         candidates_data = {
@@ -147,6 +173,21 @@ class JSMMethodApplication:
         return candidates_data
 
     def get_qubo_data(self, candidates, candidate_concepts, context, alpha, beta,n_rules, solution_type = "classical") -> List[Dict] | None:
+        """
+        Generates QUBO data and selects candidates based on the specified solution type.
+
+        Args:
+            candidates (List): List of candidate items to be evaluated.
+            candidate_concepts (List): List of concepts corresponding to each candidate.
+            context (Any): Contextual information required for QUBO formulation.
+            alpha (float): Weight parameter for the QUBO formulation.
+            beta (float): Weight parameter for the QUBO formulation.
+            n_rules (int): Number of rules to be considered in the QUBO formulation.
+            solution_type (str, optional): Type of solution to use ("classical" or "quantum"). Defaults to "classical".
+
+        Returns:
+            List[Dict] | None: List of selected candidate concepts if a valid solution type is specified, otherwise None.
+        """
 
         Q_matrix, offset = qubo_formulation.build_qubo(candidates, context, alpha, beta, n_rules)
         if solution_type == "classical":
@@ -165,9 +206,18 @@ class JSMMethodApplication:
         return selected_candidates
 
     def classify_(self, undetermined_context: int, index: int) -> Dict[int, float] | int | None:
-        print("Index: ", index)
-        #baseline candidates
-        
+        """
+            Classifies a single undetermined context using the trained JSM method and QUBO-selected candidates.
+
+            Args:
+                undetermined_context (int): Bitset representation of the test instance's attributes.
+                index (int): Index of the test instance (not used in logic, but may be for logging or future extensions).
+
+            Returns:
+                int: Predicted class label (0 or 1) for the test instance.
+                None: If no candidates or QUBO data are available.
+        """
+    
 
         #classification based on the data
         if len(self.candidates_data) == 0: #type: ignore

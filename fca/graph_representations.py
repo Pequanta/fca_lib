@@ -8,6 +8,7 @@ matplotlib.use("TkAgg")
 class BipartiteGraph:
     def __init__(self, relation_encoded: np.ndarray, objects: np.ndarray, attributes: np.ndarray) -> None:
         """
+            Initializes a bipartite graph from the given relation encoding, objects, and attributes.
             Args:
                 relation_encoded: contains bitset integers representing whether the relation exists between objects and attributes in 
                                   their binary form
@@ -15,8 +16,8 @@ class BipartiteGraph:
 
                 attributes: a numpy array containing names of attributes
 
-            return:
-                it returns a bipartite graph having objects on one side and attributes on the other and having edges between them
+            Returns:
+                None
 
 
         """
@@ -26,7 +27,14 @@ class BipartiteGraph:
         self.objects = objects
         self.attributes = attributes
     def generate_graph(self):
+        """
+            Generates the bipartite graph by adding nodes for objects and attributes and edges based on the relation encoding.
+            Args:
+                None
 
+            Returns:
+                nx.Graph: The constructed bipartite graph.
+        """
         #adding objects and attributes as nodes
         self.b_graph.add_nodes_from(self.objects, bipartite=0)
 
@@ -47,6 +55,9 @@ class BipartiteGraph:
                 j -= 1
         return self.b_graph
     def plot_graph(self):
+        """
+            Plots the bipartite graph using matplotlib.
+        """
         print(self.b_graph)
         pos = nx.bipartite_layout(self.b_graph, self.objects)
 
@@ -62,21 +73,52 @@ class BipartiteGraph:
         plt.show()
 class RandomGraph:
     def __init__(self, concepts, attributes, objects):
+        """
+            Initializes a random graph for concept lattice visualization.
+
+            Args:
+                concepts (list): List of (extent_bitset, intent_bitset) pairs.
+                attributes (list): List of attribute names.
+                objects (list): List of object names.
+
+            Returns:
+                None
+        """
         self.concepts = concepts
         self.attributes = attributes
         self.objects = objects
     def bitset_to_attrset(self, bits: int) -> set[str]:
+        """
+            Converts a bitset integer to a set of attribute names.
+
+            Args:
+                bits (int): Bitset integer representing attributes.
+
+            Returns:
+                set[str]: Set of attribute names corresponding to bits set to 1.
+        """
         return {self.attributes[i] for i in range(len(self.attributes)) if bits & (1 << i)}
 
     def bitset_to_objset(self, bits: int) -> set[str]:
+        """
+            Converts a bitset integer to a set of object names.
+
+            Args:
+                bits (int): Bitset integer representing objects.
+
+            Returns:
+                set[str]: Set of object names corresponding to bits set to 1.
+        """
         return {self.objects[i] for i in range(len(self.objects)) if bits & (1 << i)}
     def build_lattice_graph(self):
         """
-        Builds a concept lattice (Hasse diagram) as a NetworkX graph.
-        
-        :param concepts: List of (intent_bitset, extent_bitset) pairs
-        :param attribute_order: Ordered list of attributes (used for sorting)
-        :return: (graph, pos, labels) tuple
+            Builds a concept lattice (Hasse diagram) as a NetworkX directed graph.
+
+            Args:
+                None
+
+            Returns:
+                Tuple[nx.DiGraph, dict, dict]: The graph, node positions, and node labels.
         """
         concepts = [(obj, att) for obj, att in self.concepts]  # Keep as bitsets
         print(concepts)
@@ -135,6 +177,9 @@ class RandomGraph:
         return G, pos, labels
 
     def plot_graph(self):
+        """
+            Plots the concept lattice (Hasse diagram) using matplotlib.
+        """
         G, pos, labels = self.build_lattice_graph()
         plt.figure(figsize=(12, 8))
         nx.draw(
