@@ -47,7 +47,7 @@ class NextClosure:
             else:
                 candidate = A | mask
                 closed = self._intent_closure_bitset(candidate)
-                if (closed & ~A) & ((1 << i) - 1) == 0:
+                if closed > A and (closed & ~A) & ((1 << i) - 1) == 0:
                     return closed
         return None
 
@@ -57,7 +57,6 @@ class NextClosure:
         concepts = []
         seen = set()
         current = 0
-
         while current is not None:
             closed = self._intent_closure_bitset(current)
             if closed not in seen:
@@ -69,8 +68,10 @@ class NextClosure:
                         extent_bits &= self.attribute_bit_columns[i]
 
                 concepts.append((extent_bits, closed))
-
-            current = self._next_closure_bitset(current)
+            next_current = self._next_closure_bitset(current)
+            if next_current is None or next_current in seen or next_current == current:
+                break
+            current = next_current
 
         return concepts
     
@@ -104,6 +105,9 @@ class NextClosure:
                 if self.min_support and support >= self.min_support:
                     concepts.append((extent_bits, closed))
 
-            current = self._next_closure_bitset(current)
+            next_current = self._next_closure_bitset(current)
+            if next_current is None or next_current in seen or next_current == current:
+                break
+            current = next_current
         return concepts
 

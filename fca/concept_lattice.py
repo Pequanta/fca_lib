@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Set, Tuple
-from utils.bitset import BitSetOperations
-from algorithms.next_closure import NextClosure
+from fca.utils.bitset import BitSetOperations
+from fca.algorithms.next_closure import NextClosure
 
 set_operations = BitSetOperations()
 

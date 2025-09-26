@@ -1,4 +1,4 @@
-from algorithms.next_closure import NextClosure
+from fca.algorithms.next_closure import NextClosure
 import networkx as nx
 from typing import List, Tuple
 from fca.utils.utils import count_ones, gini_gain_over_baseline, gini_impurity_from_counts
@@ -30,7 +30,7 @@ class IcebergConcept:
         index = 0
         if class_counts is None:
             class_counts = {0: 0, 1: 0}
-            while index < num_objects:
+            while (len(concept) > 0) and index < num_objects:
                 if (1 << index) & concept[0] != 0:
                     if (1 << index) & goal_attr[index] != 0:
                         class_counts[1] += 1
@@ -43,8 +43,7 @@ class IcebergConcept:
             "class_counts": class_counts,
             "gini_impurity":  gini_impurity_from_counts(class_counts),
             "gini_gain": gini_gain_over_baseline(class_counts, baseline_counts)
-        }
-
+        } if len(concept) > 0 else {}
         return result
 
         
