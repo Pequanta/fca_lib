@@ -1,0 +1,4 @@
+decision_tree_acc,decision_tree_prec,decision_tree_rec,jsm_classical_acc,jsm_classical_prec,jsm_classical_rec,jsm_dirac_acc,jsm_dirac_prec,jsm_dirac_rec,min_support,n_rules,runtime,date
+0.901,0.813,0.953,0.836,0.731,0.891,N/A,N/A,N/A,0.17841266591230312,45,5.2799012660980225,2025-09-26 15:49:19
+0.906,0.944,0.797,0.918,0.917,0.859,N/A,N/A,N/A,0.17870565017316653,43,9.142260074615479,2025-09-26 15:49:28
+0.936,0.908,0.922,0.854,0.753,0.906,N/A,N/A,N/A,0.1775606728030102,29,9.653375387191772,2025-09-26 15:49:38
