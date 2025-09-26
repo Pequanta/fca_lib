@@ -2,11 +2,14 @@ import os, sys
 from scripts.examples.jsm_method.jsm_method import JSMMethodApplication
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../fca')))
 
+
 import numpy as np
 import pandas as pd
+
+import time
 from sklearn.model_selection import train_test_split # type: ignore
 from sklearn.tree import DecisionTreeClassifier # type: ignore
-from sklearn.metrics import accuracy_score # type: ignore
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix # type: ignore
 from fca.encoders import Encoder
 from fca.concept_lattice import ConceptLattice
 from fca.graph_representations import RandomGraph
@@ -16,9 +19,10 @@ from fca.qubo_formulation.classical_solutions import ClassicalSolutions
 from fca.graph_representations import BipartiteGraph
 from jsm_method.data_preprocessing import PreprocessingJSM
 from fca.utils.fuzzy_logic import FuzzyLogic
-from typing import List, Tuple
-from collections import Counter
+
+
 encoder = Encoder()
+
 
 
 
@@ -65,6 +69,13 @@ fuzzy_.data['diagnosis'] = fuzzy_.class_col
 
 
 
+def evaluate(y_true, y_pred):
+    return {
+        "accuracy": accuracy_score(y_true, y_pred),
+        "precision": precision_score(y_true, y_pred, zero_division=0),
+        "recall": recall_score(y_true, y_pred, zero_division=0),
+    }
+
 def decision_tree_classifier(X_train, y_train, X_test):
     """
     Trains a Decision Tree classifier and predicts labels for the test set.
@@ -82,7 +93,7 @@ def decision_tree_classifier(X_train, y_train, X_test):
     return dt.predict(X_test)
 
 
-def jsm_classifier(X_train, y_train, X_test, preprocessing_class, jsm_model_class, simulation_type="classical"):
+def jsm_classifier(X_train, y_train, X_test, preprocessing_class, jsm_model_class, simulation_type="classical", min_support=1.76, n_rules=30):
     """
     Trains a JSM-based classifier and predicts labels for the test set.
 
@@ -110,15 +121,17 @@ def jsm_classifier(X_train, y_train, X_test, preprocessing_class, jsm_model_clas
             objects_=list(objects),
             attributes_=list(attributes),
             data_preprocessing=data_,
-            solution_type=simulation_type
-        ) 
-    
+            solution_type=simulation_type,
+            min_support=min_support,
+            n_rules=n_rules
+        )
+
     jsm_method.train()
     result = [jsm_method.classify_(undetermined_context[i], i) == 1 for i in range(len(undetermined_context))]
     return result
 
 
-def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, preprocessing_class, test_size=0.3, random_state=42):
+def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, preprocessing_class, test_size=0.3, random_state=42, quantum_available=False, min_support=1.76, n_rules = 30):
     """
     Benchmark JSM-based classification against a Decision Tree classifier.
 
@@ -148,23 +161,67 @@ def benchmark_jsm_vs_classical(df, numeric_cols, class_col, jsm_model_class, pre
 
     #classification with decision tree
     y_pred_dt = decision_tree_classifier(X_train, y_train, X_test)
-    acc_dt = accuracy_score(y_test, y_pred_dt)
+    eval_metrics_dt = evaluate(y_test, y_pred_dt)
+
+    dt_data = {"decision_tree_acc": f"{eval_metrics_dt['accuracy']:.3f}", "decision_tree_prec": f"{eval_metrics_dt['precision']:.3f}", "decision_tree_rec": f"{eval_metrics_dt['recall']:.3f}"}
 
 
     #classification with JSM with classical annealer
-    y_pred_jsm_classical = jsm_classifier(X_train, y_train, X_test, jsm_model_class=jsm_model_class, preprocessing_class=preprocessing_class, simulation_type="classical")
-    acc_jsm_classical = accuracy_score(y_test, y_pred_jsm_classical)
+    y_pred_jsm_classical = jsm_classifier(X_train, y_train, X_test, jsm_model_class=jsm_model_class, preprocessing_class=preprocessing_class, simulation_type="classical", min_support=min_support, n_rules=n_rules)
+    eval_metrics_jsm_classical = evaluate(y_test, y_pred_jsm_classical)
+
+    jsm_data_classical = {"jsm_classical_acc": f"{eval_metrics_jsm_classical['accuracy']:.3f}", "jsm_classical_prec": f"{eval_metrics_jsm_classical['precision']:.3f}", "jsm_classical_rec": f"{eval_metrics_jsm_classical['recall']:.3f}"}
+    if quantum_available:
+        #classification with JSM with dirac-3
+        y_pred_jsm_dirac = jsm_classifier(X_train, y_train, X_test, jsm_model_class=jsm_model_class, preprocessing_class=preprocessing_class, simulation_type="quantum", min_support=min_support, n_rules=n_rules)
+        eval_metrics_jsm_dirac = evaluate(y_test, y_pred_jsm_dirac)
+
+        jsm_data_dirac = {"jsm_dirac_acc": f"{eval_metrics_jsm_dirac['accuracy']:.3f}", "jsm_dirac_prec": f"{eval_metrics_jsm_dirac['precision']:.3f}", "jsm_dirac_rec": f"{eval_metrics_jsm_dirac['recall']:.3f}"}
+    return {**dt_data, **jsm_data_classical, **(jsm_data_dirac if quantum_available else {"jsm_dirac_acc": "N/A", "jsm_dirac_prec": "N/A", "jsm_dirac_rec": "N/A"})} #type: ignore 
 
 
-    #classification with JSM with dirac-3
-    y_pred_jsm_dirac = jsm_classifier(X_train, y_train, X_test, jsm_model_class=jsm_model_class, preprocessing_class=preprocessing_class, simulation_type="quantum")
-    acc_jsm_dirac = accuracy_score(y_test, y_pred_jsm_dirac)
-    
-    return {"decision_tree": f"{acc_dt:.3f}", "jsm_classical": f"{acc_jsm_classical:.3f}", "jsm_dirac": f"{acc_jsm_dirac:.3f}"}
 
 
+def run_experiments(interval_sec: list | int, test_min_support: list, n_rules: list, n_runs=3, quantum_available=False):
+    results = []
+    for seed in range(n_runs):
+        print(f"Running experiment with seed {seed}...")
+        start = time.time()
+        scores = benchmark_jsm_vs_classical(
+            df_temp, 
+            [col for col in df_temp.columns if col != 'diagnosis'], 
+            'diagnosis', 
+            JSMMethodApplication, 
+            PreprocessingJSM, 
+            test_size=0.3, 
+            random_state=seed,
+            quantum_available=quantum_available,
+            min_support=test_min_support[seed],
+            n_rules=n_rules[seed]
+        )
+        end = time.time()
 
+        scores['min_support'] = test_min_support[seed]
+        scores['n_rules'] = n_rules[seed]
+        scores['runtime'] = end - start #type: ignore
+        scores['date'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        results.append(scores)
+        print(f"Experiment {seed} completed. Waiting {interval_sec} seconds before next run...")
+        time.sleep(interval_sec[seed] if quantum_available else 0) #type: ignore
+    return results
 
 if __name__ == "__main__":
-    print(benchmark_jsm_vs_classical(df_temp, [col for col in df_temp.columns if col != 'diagnosis'], 'diagnosis', JSMMethodApplication, PreprocessingJSM)) # type: ignore
-    #generate_concept_lattice(df_small)
+    quantum_available = False
+    experiment_id = int(time.time())
+    test_min_support = list(np.random.uniform(0.176, 0.18) for _ in range(10))
+    test_n_rules = list(np.random.randint(10, 50) for _ in range(10))
+
+    if quantum_available:
+        interval_sec = [np.random.randint(100, 300) for _ in range(10)]
+    else:
+        interval_sec = 0
+
+    results = run_experiments(interval_sec=interval_sec, n_runs=5, quantum_available=quantum_available, test_min_support=test_min_support, n_rules=test_n_rules)
+   
+    df_results = pd.DataFrame(results)
+    df_results.to_csv(f"results/experiment_results-{experiment_id}.csv", index=False)

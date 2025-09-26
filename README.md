@@ -1,4 +1,4 @@
-# FCA\_LIB
+# FCA_LIB
 
 A research-oriented Python library for **Formal Concept Analysis (FCA)** with extensions for **classification, hypothesis generation, and optimization**. The project combines classical FCA methods with experimental approaches such as the **John Stuart Mill (JSM) method**, **Titanic iceberg pruning**, and **QUBO-based optimization** (for both classical solvers and quantum-inspired workflows).
 
@@ -19,6 +19,7 @@ A research-oriented Python library for **Formal Concept Analysis (FCA)** with ex
 
   * `jsm_method/` – JSM application (data preprocessing, hypothesis generation, classification).
   * `run_example.py` – Entry point for running example workflows.
+  * `placeholder_example.py` – Placeholder file for uncomment section usage.
 
 * **`docs/`** – Documentation and supporting material.
 
@@ -62,6 +63,20 @@ git clone https://github.com/Pequanta/fca_lib.git
 cd fca_lib
 ```
 
+if you have an api token for qci-client, create an .env file inside the fca directory
+
+```bash
+QCI_TOKEN=YOUR_TOKEN  
+QCI_URL=https://api.qci-prod.com
+```
+
+ [!Only in the case of dirac token support] -> **Now make the value of the following variable in `scripts/examples/run_example.py` True ** to enable QCI-client integration and comment out the one following it.
+
+```python
+#scripts/examples/run_example.py
+214 |    quantum_available = False
+```
+
 ### Running Examples
 
 Run the included example:
@@ -69,7 +84,8 @@ Run the included example:
 ```bash
 bash scripts/run_example.sh
 ```
-------
+
+---
 
 ## 🔮 Roadmap
 
@@ -81,4 +97,5 @@ bash scripts/run_example.sh
 ## 📜 License
 
 This project is under [MIT License](LICENSE).
+
 

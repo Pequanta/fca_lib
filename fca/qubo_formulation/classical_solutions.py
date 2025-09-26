@@ -20,6 +20,8 @@ class ClassicalSolutions:
         if seed is not None:
             random.seed(seed)
             np.random.seed(seed)
+        if self.Q.shape[0] == 0:
+            raise ValueError("Q matrix is not defined.")
         m = self.Q.shape[0]
         # random initial solution
         x = [random.choice([0,1]) for _ in range(m)]
@@ -40,7 +42,7 @@ class ClassicalSolutions:
                 if cur_e < best_e:
                     best_e = cur_e
                     best = list(x)
-        print(f"Best energy: {best_e}, best selection: {best}")
+        print(f"Best energy: {best_e}")
         return best, best_e
     
     def qubo_energy(self, x, offset=0.0):

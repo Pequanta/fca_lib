@@ -1,5 +1,5 @@
 from typing import Dict, List, Set, Tuple
-from numpy import binary_repr
+
 from collections import Counter
 from fca.utils.bitset import BitSetOperations
 from fca.utils.utils import count_ones
@@ -9,6 +9,11 @@ from fca.qubo_formulation.qubo_formulations import QuboFormulation
 from fca.qubo_formulation.classical_solutions import ClassicalSolutions
 from scripts.examples.jsm_method.data_preprocessing import PreprocessingJSM
 from fca.qubo_formulation.dirac_solution import DiracSolution
+
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings('ignore')
 
 bset_operations = BitSetOperations()
 iceberg_operations = IcebergConcept()
@@ -21,9 +26,11 @@ class JSMMethodApplication:
             objects_: List,
             attributes_: List,
             data_preprocessing: PreprocessingJSM,
-            solution_type: str
+            solution_type: str,
+            n_rules: int = 30,
+            min_support: float = 0.176
             ):
-        self.min_support = 0.176
+        self.min_support = min_support
         self.positive_hypotheses = []
         self.negative_hypotheses = []
         self.goal_attr = goal_attr
@@ -31,7 +38,7 @@ class JSMMethodApplication:
         self.attributes_ = attributes_
         self.data_processing = data_preprocessing
         self.positive_context, self.negative_context = data_preprocessing.process_data() 
-        self.n_rules = 30
+        self.n_rules = n_rules
 
         self.candidates_data = None
         self.qubo_data = None
@@ -200,9 +207,7 @@ class JSMMethodApplication:
             print("Solution type not specified")
             return None
         selected_candidates = [candidate_concepts[i] for i in range(len(candidate_concepts)) if sel_vec[i] == 1]
-        print("matrix size: ", Q_matrix.shape)
-        print("Qubo Data")
-        print(*Q_matrix[:10], sep="\n")
+        print("Q matrix size: ", Q_matrix.shape)
         return selected_candidates
 
     def classify_(self, undetermined_context: int, index: int) -> Dict[int, float] | int | None:
