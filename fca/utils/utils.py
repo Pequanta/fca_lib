@@ -15,7 +15,7 @@ def gini_impurity_from_counts(counts):
     total = sum(list(counts.values()))
     if total == 0:
         return 0
-    probs = [count / total for count in counts]
+    probs = [counts[count] / total for count in counts]
     return 1 - sum(p ** 2 for p in probs)
 
 def gini_gain_over_baseline(extent_counts, baseline_counts):
