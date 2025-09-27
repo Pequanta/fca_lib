@@ -30,11 +30,11 @@ else
 fi
 
 
-if python3.12 -c "import importlib.util; print(importlib.util.find_spec('tkinter') is not None)";then
+if python3.12 -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('tkinter') else 1)"; then
     echo "tkinter is already installed."
 else
     echo "Installing tkinter..."
-    sudo apt install python3.12-tk
+    sudo apt install -y python3.12-tk
 fi
 echo "Running example script..."
 python3.12 scripts/examples/run_example.py
