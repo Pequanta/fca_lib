@@ -213,11 +213,13 @@ def run_experiments(interval_sec: list | int, test_min_support: list, n_rules: l
 if __name__ == "__main__":
     quantum_available = False
     experiment_id = int(time.time())
-    test_min_support = list(np.random.uniform(0.176, 0.18) for _ in range(10))
-    test_n_rules = list(np.random.randint(10, 50) for _ in range(10))
+    #For small scale testing do not reduce below 0.7 for min_support and 200 for n_rules
+    test_min_support = sorted([np.random.uniform(0.7, 0.9) for _ in range(5)])
+    test_n_rules = sorted([np.random.randint(200, 400) for _ in range(5)])
+
 
     if quantum_available:
-        interval_sec = [np.random.randint(100, 300) for _ in range(10)]
+        interval_sec = [np.random.randint(100, 300) for _ in range(1)]
     else:
         interval_sec = 0
 
