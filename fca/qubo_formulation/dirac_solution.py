@@ -10,8 +10,8 @@ class DiracSolution:
             'file_name': "smallest_objective.json",
             'file_config': {'qubo': {"data": q_matrix}}
         }
-        self.api_url = config("QCI_URL")
-        self.api_token = config("QCI_TOKEN")
+        self.api_url = config("QCI_URL", default="https://api.qci-prod.com")
+        self.api_token = config("QCI_TOKEN", default="YOUR TOKEN") # type: ignore
         self.qclient = QciClient(url=self.api_url, api_token=self.api_token) #type: ignore
 
         print("Initialized parameters!!!")
