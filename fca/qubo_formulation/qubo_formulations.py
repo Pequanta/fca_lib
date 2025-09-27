@@ -1,6 +1,5 @@
 import numpy as np
 import networkx as nx
-from fca.utils.utils import count_ones
 
 class QuboFormulation:
     """
@@ -27,11 +26,10 @@ class QuboFormulation:
         """
         n = len(concepts)
         Q = np.zeros((n, n))
-        
 
         # Support-based diagonal values
         for i in range(n):
-            support = count_ones(concepts[i][0]) 
+            support = concepts[i][0].bit_count() 
             # Reward or penalty based on support                    
             if support < min_support:
                 Q[i][i] += (min_support - support) ** 2  # penalty
@@ -41,7 +39,7 @@ class QuboFormulation:
         # Overlap penalty (off-diagonal)
         for i in range(n):
             for j in range(i + 1, n):
-                overlap = count_ones(concepts[i][0] & concepts[j][0])
+                overlap = (concepts[i][0] & concepts[j][0]).bit_count()
                 if overlap > 0:
                     Q[i][j] += lambda_overlap * overlap
                     Q[j][i] += lambda_overlap * overlap
@@ -74,16 +72,17 @@ class QuboFormulation:
         n = len(context)
         overlaps = np.zeros((m, m), dtype=float)
         
+        Q = np.zeros((m, m), dtype=float)
+
 
         candidate_data = list(candidates.keys())
         for i in range(m):
             ext_i = candidate_data[i][0]
             for j in range(i+1, m):
                 ext_j = candidate_data[j][0]
-                ov = count_ones(ext_i & ext_j) / n if n>0 else 0.0
+                ov = (ext_i & ext_j).bit_count() / n if n>0 else 0.0
                 overlaps[i, j] = ov
                 overlaps[j, i] = ov
-        Q = np.zeros((m, m), dtype=float)
         # Linear contribution (diagonal)
         for i in range(m):
             Q[i, i] += -linear[i] + beta * (1.0)  # -gain + beta*1 from x_i^2 term

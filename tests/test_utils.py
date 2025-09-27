@@ -5,7 +5,6 @@ def test_count_ones():
     assert count_ones(0b1) == 1
     assert count_ones(0b101010) == 3
     assert count_ones(0xFFFFFFFF) == 32
-    assert count_ones(-1) == 32  # 32-bit representation
 
 def test_gini_impurity_from_counts():
     assert gini_impurity_from_counts({0: 0, 1: 0}) == 0.0

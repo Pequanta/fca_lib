@@ -1,7 +1,6 @@
 
 from itertools import product
 import numpy as np
-from fca.utils.utils import count_ones
 import random
 import math
 class ClassicalSolutions:
