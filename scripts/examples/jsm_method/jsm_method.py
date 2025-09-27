@@ -1,5 +1,4 @@
 from typing import Dict, List, Set, Tuple
-from IPython.core.debugger import set_trace
 from collections import Counter
 from fca.utils.bitset import BitSetOperations
 from fca.concept_lattice import ConceptLattice
