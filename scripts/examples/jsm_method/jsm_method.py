@@ -1,15 +1,14 @@
 from typing import Dict, List, Set, Tuple
-
+from IPython.core.debugger import set_trace
 from collections import Counter
 from fca.utils.bitset import BitSetOperations
-from fca.utils.utils import count_ones
 from fca.concept_lattice import ConceptLattice
 from fca.algorithms.iceberg_concept import IcebergConcept
 from fca.qubo_formulation.qubo_formulations import QuboFormulation
 from fca.qubo_formulation.classical_solutions import ClassicalSolutions
 from scripts.examples.jsm_method.data_preprocessing import PreprocessingJSM
 from fca.qubo_formulation.dirac_solution import DiracSolution
-
+import numpy as np
 import warnings
 
 # Suppress all warnings
@@ -47,6 +46,7 @@ class JSMMethodApplication:
         #positive concepts
         ext_int, int_ext, _, _ = self.data_processing.encode_data(1)
         positive_lattice = ConceptLattice(ext_int, int_ext, self.objects_[:len(self.positive_context)], self.attributes_, self.min_support)
+  
         self.positive_concepts = positive_lattice.all_concepts()
         self.baseline_counts = {}
 
@@ -73,7 +73,7 @@ class JSMMethodApplication:
         self.candidates_data = self.get_candidates()
         self.candidate_concepts = list(self.candidates_data.keys())
         self.qubo_data = self.get_qubo_data(self.candidates_data, self.candidate_concepts, self.positive_hypotheses, alpha=self.min_support, beta=1.0, n_rules=self.n_rules, solution_type=self.solution_type)
-
+        
         print("Candidate size: ", len(self.candidate_concepts))
 
         
@@ -195,7 +195,6 @@ class JSMMethodApplication:
         Returns:
             List[Dict] | None: List of selected candidate concepts if a valid solution type is specified, otherwise None.
         """
-
         Q_matrix, offset = qubo_formulation.build_qubo(candidates, context, alpha, beta, n_rules)
         if solution_type == "classical":
             solution_ = ClassicalSolutions(Q_matrix)
@@ -232,7 +231,6 @@ class JSMMethodApplication:
         if len(self.qubo_data) == 0:#type: ignore
             return self.baseline_counts.most_common(1)[0][0] # type: ignore
         votes = Counter({0: 0, 1: 0})
-
         candidate_intents = [self.candidate_concepts[i][1] for i in range(len(self.qubo_data)) if len(self.qubo_data) > 0 and self.qubo_data[i][1] > 0] #type: ignore
         for i in range(len(candidate_intents)):
             if bset_operations.__subset_of__(candidate_intents[i], undetermined_context):#type: ignore
@@ -264,4 +262,4 @@ class JSMMethodApplication:
                 result ^= (1 << i)
             i += 1
             data_size -= 1
-        return count_ones(result) / data_size
+        return result.bit_count() / data_size

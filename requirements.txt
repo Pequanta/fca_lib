@@ -6,3 +6,4 @@ python-decouple
 
 ##The following packages are used to run the examples
 scikit-learn
+qci-client
